@@ -36,7 +36,8 @@ const langs = Object.keys(rawStops) as Lang[];
 const nameIndex = Object.fromEntries(
   langs.map((lang) => [
     lang,
-    new Map(rawStops[lang].map((stop) => [stop.code, stop.name?.trim() || null])),
+    // Collapse the stray double spaces in the source data (e.g. '190  - JAMBO').
+    new Map(rawStops[lang].map((stop) => [stop.code, stop.name?.replace(/\s+/g, ' ').trim() || null])),
   ]),
 ) as Record<Lang, Map<string, string | null>>;
 

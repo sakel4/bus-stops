@@ -5,7 +5,10 @@ import { languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 
 interface Props {
+  /** Page name; shown as "{title} · {site title}". */
   title?: string;
+  /** Complete <title>, used as-is instead of `title` (for pages with search-tuned titles). */
+  fullTitle?: string;
   description?: string;
   /** Path without locale prefix, used for the language switcher / hreflang. */
   path?: string;
@@ -13,8 +16,13 @@ interface Props {
 
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
-const { title, description = t('site.description'), path = '' } = Astro.props;
-const pageTitle = title ? `${title} · ${t('site.title')}` : t('site.title');
+const { title, fullTitle, description = t('site.description'), path = '' } = Astro.props;
+const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.title')}` : t('site.title'));
+
+// Link previews (Facebook, Instagram DMs, X/Twitter, Discord, chat apps). These need absolute URLs.
+const ogLocales: Record<Lang, string> = { el: 'el_GR', en: 'en_US' };
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const imageUrl = new URL('/og-image.jpg', Astro.site).href;
 ---
 
 <!doctype html>
@@ -24,6 +32,27 @@ const pageTitle = title ? `${title} · ${t('site.title')}` : t('site.title');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#1d4ed8" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t('site.title')} />
+    <meta property="og:title" content={fullTitle ?? title ?? t('site.title')} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:locale" content={ogLocales[lang]} />
+    {
+      (Object.keys(languages) as Lang[])
+        .filter((code) => code !== lang)
+        .map((code) => <meta property="og:locale:alternate" content={ogLocales[code]} />)
+    }
+    <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t('og.imageAlt')} />
+    <!-- X/Twitter reads og:title/description/image; it only needs the card type. -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image:alt" content={t('og.imageAlt')} />
     {
       (Object.keys(languages) as Lang[]).map((code) => (
         <link rel="alternate" hreflang={code} href={localizePath(code, path)} />

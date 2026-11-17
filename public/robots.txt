@@ -1,0 +1,10 @@
+# Heraklion Bus Stops
+# All pages may be crawled, including by AI crawlers. A summary for language models is at /llms.txt.
+
+User-agent: *
+Allow: /
+# Live data endpoint: changes every few seconds and calls a third-party API, so it is not worth crawling.
+Disallow: /api/
+
+# TODO: once the production domain and sitemap exist, add:
+# Sitemap: https://<your-domain>/sitemap-index.xml
