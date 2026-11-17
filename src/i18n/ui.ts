@@ -45,6 +45,10 @@ export const ui = {
     'locate.showAll': 'Όλες οι στάσεις',
     'locate.close': 'Κλείσιμο',
     'locate.you': 'Η θέση σας',
+    'footer.disclaimer': 'Ανεπίσημη εφαρμογή, χωρίς σύνδεση με το Αστικό ΚΤΕΛ Ηρακλείου.',
+    'footer.unofficial': 'Ανεπίσημη εφαρμογή',
+    'footer.faq': 'Συχνές ερωτήσεις',
+    'footer.privacy': 'Απόρρητο',
     'lang.switch': 'Γλώσσα',
   },
   en: {
@@ -84,6 +88,10 @@ export const ui = {
     'locate.showAll': 'Show all stops',
     'locate.close': 'Close',
     'locate.you': 'Your location',
+    'footer.disclaimer': 'Unofficial app, not affiliated with Astiko KTEL Irakleiou.',
+    'footer.unofficial': 'Unofficial app',
+    'footer.faq': 'FAQ',
+    'footer.privacy': 'Privacy',
     'lang.switch': 'Language',
   },
 } as const satisfies Record<Lang, Record<string, string>>;
