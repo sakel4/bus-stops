@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* White panel used for the sections of the stop and line pages. */
+@utility card {
+  @apply rounded-lg border border-slate-200 bg-white shadow-sm;
+}
+
+/* White bordered button (back links, "Try again", "Near me", …). */
+@utility btn-secondary {
+  @apply rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none;
+}
+
+/* Line code chip; set its background with getLineColor(). Only links get hover and focus styles. */
+@utility line-chip {
+  @apply rounded-md font-mono text-sm font-semibold text-white shadow-sm;
+
+  &[href] {
+    @apply transition hover:brightness-125 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:outline-none;
+  }
+}

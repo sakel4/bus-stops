@@ -3,9 +3,8 @@ import stopsEn from '../data/stops_en.json';
 import { defaultLang, type Lang } from '../i18n/ui';
 import { localizePath } from '../i18n/utils';
 
-/** A stop as stored in src/data/stops_<lang>.json. */
+/** The fields we use from src/data/stops_<lang>.json (the files also have an unused `id`). */
 interface RawStop {
-  id: number;
   code: string;
   name: string | null;
   latitude: number;
@@ -15,7 +14,6 @@ interface RawStop {
 }
 
 export interface Stop {
-  id: number;
   code: string;
   /** Name in every language; falls back to the Greek name where a translation is missing. */
   names: Record<Lang, string>;
@@ -52,7 +50,14 @@ const stopsByLang = Object.fromEntries(
   langs.map((lang) => [
     lang,
     rawStops[lang]
-      .map(({ name: _, ...stop }) => ({ ...stop, names: getNames(stop.code) }))
+      .map(({ code, latitude, longitude, lineCodes, routeCodes }) => ({
+        code,
+        names: getNames(code),
+        latitude,
+        longitude,
+        lineCodes,
+        routeCodes,
+      }))
       .sort((a, b) => a.names[lang].localeCompare(b.names[lang], lang)),
   ]),
 ) as Record<Lang, Stop[]>;
