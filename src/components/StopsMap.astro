@@ -1,0 +1,105 @@
+---
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import { getStopName, type Stop } from '../lib/stops';
+
+interface Props {
+  lang: Lang;
+  stops: Stop[];
+}
+
+const { lang, stops } = Astro.props;
+const t = useTranslations(lang);
+
+// Only ship what the map needs to the browser.
+const mapData = {
+  labels: { code: t('stop.code'), lines: t('stop.lines') },
+  stops: stops.map((s) => ({
+    code: s.code,
+    name: getStopName(s, lang),
+    lat: s.latitude,
+    lng: s.longitude,
+    lines: s.lineCodes,
+  })),
+};
+---
+
+<div class="relative h-full w-full">
+  <div data-stops-map class="absolute inset-0 z-0" role="region" aria-label={t('map.label')}></div>
+  <script type="application/json" data-stops-map-data set:html={JSON.stringify(mapData)} />
+</div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+
+  interface MapStop {
+    code: string;
+    name: string;
+    lat: number;
+    lng: number;
+    lines: string[];
+  }
+
+  const container = document.querySelector<HTMLElement>('[data-stops-map]');
+  const dataEl = document.querySelector<HTMLScriptElement>('[data-stops-map-data]');
+
+  if (container && dataEl) {
+    const { labels, stops } = JSON.parse(dataEl.textContent ?? '{}') as {
+      labels: { code: string; lines: string };
+      stops: MapStop[];
+    };
+
+    const map = L.map(container, { preferCanvas: true });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    const escape = (s: string) =>
+      s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+    const markers = new Map<string, L.CircleMarker>();
+    const layer = L.featureGroup().addTo(map);
+
+    for (const stop of stops) {
+      const marker = L.circleMarker([stop.lat, stop.lng], {
+        radius: 6,
+        color: '#1d4ed8',
+        weight: 2,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.85,
+      }).bindPopup(
+        `<strong>${escape(stop.name)}</strong><br>` +
+          `${escape(labels.code)}: ${escape(stop.code)}<br>` +
+          `${escape(labels.lines)}: ${escape(stop.lines.join(', '))}`,
+      );
+      markers.set(stop.code, marker);
+      marker.addTo(layer);
+    }
+
+    const allBounds = layer.getBounds();
+    map.fitBounds(allBounds, { padding: [20, 20] });
+
+    // Keep the map in sync with the search box in the stop list.
+    window.addEventListener('stops:filter', (event) => {
+      const codes = (event as CustomEvent<{ codes: string[] | null }>).detail.codes;
+      const visible = codes ? new Set(codes) : null;
+
+      for (const [code, marker] of markers) {
+        const show = !visible || visible.has(code);
+        if (show && !layer.hasLayer(marker)) layer.addLayer(marker);
+        if (!show && layer.hasLayer(marker)) layer.removeLayer(marker);
+      }
+
+      if (visible && visible.size > 0) {
+        map.fitBounds(layer.getBounds(), { padding: [40, 40], maxZoom: 16 });
+      } else if (!visible) {
+        map.fitBounds(allBounds, { padding: [20, 20] });
+      }
+    });
+
+    // The map container may change size (e.g. responsive layout).
+    new ResizeObserver(() => map.invalidateSize()).observe(container);
+  }
+</script>

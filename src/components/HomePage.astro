@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StopList from './StopList.astro';
+import StopsMap from './StopsMap.astro';
+import { getLang, useTranslations } from '../i18n/utils';
+import { stops } from '../lib/stops';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+---
+
+<Layout>
+  <h1 class="sr-only">{t('home.heading')}</h1>
+  <div class="flex h-full flex-col md:flex-row">
+    <div class="h-[45vh] shrink-0 md:order-2 md:h-full md:flex-1">
+      <StopsMap lang={lang} stops={stops} />
+    </div>
+    <aside
+      class="min-h-0 flex-1 border-slate-200 md:order-1 md:w-96 md:flex-none md:border-r"
+    >
+      <StopList lang={lang} stops={stops} />
+    </aside>
+  </div>
+</Layout>

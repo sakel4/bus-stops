@@ -1,0 +1,39 @@
+---
+import { languages, type Lang } from '../i18n/ui';
+import { localizePath, useTranslations } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  /** Path without locale prefix, e.g. '' for home or 'stops/0122'. */
+  path?: string;
+}
+
+const { lang, path = '' } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<nav aria-label={t('lang.switch')}>
+  <ul class="flex gap-1 text-sm">
+    {
+      (Object.keys(languages) as Lang[]).map((code) => (
+        <li>
+          <a
+            href={localizePath(code, path)}
+            hreflang={code}
+            lang={code}
+            aria-current={code === lang ? 'page' : undefined}
+            class:list={[
+              'rounded-md px-2 py-1 font-medium transition-colors',
+              code === lang
+                ? 'bg-white/20 text-white'
+                : 'text-blue-100 hover:bg-white/10 hover:text-white',
+            ]}
+          >
+            {code.toUpperCase()}
+            <span class="sr-only"> – {languages[code]}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

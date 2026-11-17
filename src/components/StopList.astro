@@ -1,0 +1,127 @@
+---
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import { buildSearchText } from '../lib/search';
+import { getStopName, getStopUrl, type Stop } from '../lib/stops';
+
+interface Props {
+  lang: Lang;
+  stops: Stop[];
+}
+
+const { lang, stops } = Astro.props;
+const t = useTranslations(lang);
+const countTemplate = t('list.count', { count: '{count}' });
+---
+
+<section class="flex h-full min-h-0 flex-col" data-stop-list data-count-template={countTemplate}>
+  <div class="border-b border-slate-200 bg-white p-3">
+    <label for="stop-search" class="sr-only">{t('search.label')}</label>
+    <div class="relative">
+      <svg
+        class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M9 3.5a5.5 5.5 0 1 0 3.4 9.83l3.13 3.14a.75.75 0 1 0 1.06-1.06l-3.13-3.14A5.5 5.5 0 0 0 9 3.5ZM5 9a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"
+          clip-rule="evenodd"></path>
+      </svg>
+      <input
+        id="stop-search"
+        type="search"
+        autocomplete="off"
+        placeholder={t('search.placeholder')}
+        class="w-full rounded-lg border border-slate-300 bg-white py-2 pr-3 pl-9 text-sm shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+        data-search-input
+      />
+    </div>
+    <p class="mt-2 text-xs text-slate-500" aria-live="polite" data-count>
+      {t('list.count', { count: stops.length })}
+    </p>
+  </div>
+
+  <ul class="min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto bg-white" data-items>
+    {
+      stops.map((stop) => {
+        const name = getStopName(stop, lang);
+        return (
+          <li data-search={buildSearchText(stop.name, name, stop.code)} data-code={stop.code}>
+            <button
+              type="button"
+              class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none"
+              data-stop-button
+              data-code={stop.code}
+              data-href={getStopUrl(stop, lang)}
+            >
+              <span class="min-w-0">
+                <span class="block truncate font-medium">{name}</span>
+                <span class="block truncate text-xs text-slate-500">
+                  {t('stop.lines')}: {stop.lineCodes.join(', ')}
+                </span>
+              </span>
+              <span
+                class="shrink-0 rounded bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-700"
+                title={t('stop.code')}
+              >
+                {stop.code}
+              </span>
+            </button>
+          </li>
+        );
+      })
+    }
+  </ul>
+  <p class="hidden flex-1 bg-white p-6 text-center text-sm text-slate-500" data-empty>
+    {t('list.empty')}
+  </p>
+</section>
+
+<script>
+  import { normalize, transliterate } from '../lib/search';
+
+  const root = document.querySelector<HTMLElement>('[data-stop-list]');
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('[data-search-input]')!;
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const list = root.querySelector<HTMLElement>('[data-items]')!;
+    const items = Array.from(root.querySelectorAll<HTMLLIElement>('li[data-search]'));
+    const countTemplate = root.dataset.countTemplate ?? '{count}';
+
+    const applyFilter = () => {
+      const q = normalize(input.value);
+      const terms = q ? [q, transliterate(q)] : [];
+      const visibleCodes: string[] = [];
+
+      for (const item of items) {
+        const text = item.dataset.search ?? '';
+        const match = terms.length === 0 || terms.some((term) => text.includes(term));
+        item.hidden = !match;
+        if (match) visibleCodes.push(item.dataset.code!);
+      }
+
+      count.textContent = countTemplate.replace('{count}', String(visibleCodes.length));
+      empty.classList.toggle('hidden', visibleCodes.length > 0);
+      list.classList.toggle('hidden', visibleCodes.length === 0);
+
+      // Let the map (or anything else) know which stops are visible.
+      window.dispatchEvent(
+        new CustomEvent('stops:filter', { detail: { codes: q ? visibleCodes : null } }),
+      );
+    };
+
+    input.addEventListener('input', applyFilter);
+    // Browsers may restore the input value on back/forward navigation.
+    if (input.value) applyFilter();
+
+    root.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-stop-button]');
+      if (!button) return;
+      // TODO: navigate to the stop page once it exists:
+      // window.location.href = button.dataset.href!;
+    });
+  }
+</script>
