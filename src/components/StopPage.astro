@@ -1,0 +1,78 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StopArrivals from './StopArrivals.astro';
+import StopMap from './StopMap.astro';
+import { getLang, localizePath, useTranslations } from '../i18n/utils';
+import { getLineColor } from '../lib/lines';
+import { getStopName, getStopPath, type Stop } from '../lib/stops';
+
+interface Props {
+  stop: Stop;
+}
+
+const { stop } = Astro.props;
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+const name = getStopName(stop, lang);
+const description = t('stop.description', {
+  name,
+  code: stop.code,
+  lines: stop.lineCodes.join(', '),
+});
+---
+
+<Layout title={name} description={description} path={getStopPath(stop)}>
+  <div class="h-full overflow-y-auto">
+    <article class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
+      <a
+        href={localizePath(lang)}
+        class="inline-flex items-center gap-1.5 self-start rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
+      >
+        <svg class="size-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+            clip-rule="evenodd"></path>
+        </svg>
+        {t('stop.back')}
+      </a>
+
+      <header class="flex items-start justify-between gap-3">
+        <h1 class="min-w-0 text-2xl font-semibold break-words">{name}</h1>
+        <span
+          class="shrink-0 rounded bg-slate-200 px-2 py-1 font-mono text-sm text-slate-700"
+          title={t('stop.code')}
+        >
+          {stop.code}
+        </span>
+      </header>
+
+      <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <h2 class="mb-3 font-semibold">{t('stop.lines')}</h2>
+        <ul class="flex flex-wrap gap-2">
+          {
+            stop.lineCodes.map((line) => (
+              <li
+                class="rounded-md px-2.5 py-1 font-mono text-sm font-semibold text-white"
+                style={{ backgroundColor: getLineColor(line) }}
+              >
+                {line}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <StopArrivals lang={lang} stop={stop} />
+
+      <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="h-72">
+          <StopMap lang={lang} stop={stop} />
+        </div>
+        <p class="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">
+          {t('stop.coordinates')}: {stop.latitude.toFixed(6)}, {stop.longitude.toFixed(6)}
+        </p>
+      </section>
+    </article>
+  </div>
+</Layout>

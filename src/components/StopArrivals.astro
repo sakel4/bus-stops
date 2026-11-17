@@ -1,0 +1,157 @@
+---
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import { getLiveArrivalsUrl } from '../lib/arrivals';
+import type { Stop } from '../lib/stops';
+
+interface Props {
+  lang: Lang;
+  stop: Stop;
+}
+
+const { lang, stop } = Astro.props;
+const t = useTranslations(lang);
+
+// Templates the browser fills in; placeholders are kept as-is.
+const labels = {
+  now: t('arrivals.now'),
+  minutes: t('arrivals.minutes', { count: '{count}' }),
+  updated: t('arrivals.updated', { time: '{time}' }),
+};
+---
+
+<section
+  class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+  data-stop-arrivals
+  data-url={getLiveArrivalsUrl(stop, lang)}
+  data-lang={lang}
+  data-labels={JSON.stringify(labels)}
+  aria-busy="true"
+>
+  <div class="mb-2 flex items-baseline justify-between gap-3">
+    <h2 class="font-semibold">{t('stop.arrivals')}</h2>
+    <p class="text-xs text-slate-500" data-updated></p>
+  </div>
+
+  <ul class="divide-y divide-slate-100" data-skeleton aria-hidden="true">
+    {
+      [0, 1, 2].map(() => (
+        <li class="flex animate-pulse items-center gap-3 py-2.5">
+          <span class="h-7 w-12 rounded-md bg-slate-200" />
+          <span class="h-4 flex-1 rounded bg-slate-200" />
+          <span class="h-4 w-12 rounded bg-slate-200" />
+        </li>
+      ))
+    }
+  </ul>
+
+  <ul class="hidden divide-y divide-slate-100" data-list></ul>
+
+  <p class="hidden text-sm text-slate-500" role="status" data-empty>{t('arrivals.empty')}</p>
+
+  <div class="hidden" role="status" data-error>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm text-slate-500">{t('arrivals.error')}</p>
+      <button
+        type="button"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
+        data-retry
+      >
+        {t('arrivals.retry')}
+      </button>
+    </div>
+  </div>
+
+  <template data-row>
+    <li class="flex items-center gap-3 py-2.5">
+      <span
+        class="min-w-12 shrink-0 rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-white"
+        data-line></span>
+      <span class="min-w-0 flex-1 truncate text-sm" data-destination></span>
+      <span class="shrink-0 text-sm font-semibold tabular-nums" data-minutes></span>
+    </li>
+  </template>
+</section>
+
+<script>
+  import type { Arrival, LiveArrivalsResponse } from '../lib/arrivals';
+  import { getLineColor } from '../lib/lines';
+
+  const REFRESH_MS = 30_000;
+
+  const root = document.querySelector<HTMLElement>('[data-stop-arrivals]');
+  if (root) {
+    const url = root.dataset.url!;
+    const lang = root.dataset.lang;
+    const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<
+      'now' | 'minutes' | 'updated',
+      string
+    >;
+    const part = (name: string) => root.querySelector<HTMLElement>(`[data-${name}]`)!;
+    const states = {
+      skeleton: part('skeleton'),
+      list: part('list'),
+      empty: part('empty'),
+      error: part('error'),
+    };
+    const updated = part('updated');
+    const rowTemplate = root.querySelector<HTMLTemplateElement>('template[data-row]')!;
+
+    let timer: number | undefined;
+    let loading = false;
+
+    const show = (state: keyof typeof states) => {
+      for (const [name, el] of Object.entries(states)) el.classList.toggle('hidden', name !== state);
+    };
+
+    const formatMinutes = (minutes: number) =>
+      minutes < 1 ? labels.now : labels.minutes.replace('{count}', String(minutes));
+
+    const renderRow = (arrival: Arrival) => {
+      const row = rowTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const line = row.querySelector<HTMLElement>('[data-line]')!;
+      line.textContent = arrival.line;
+      line.style.backgroundColor = getLineColor(arrival.line);
+      row.querySelector('[data-destination]')!.textContent = arrival.destination;
+      row.querySelector('[data-minutes]')!.textContent = formatMinutes(arrival.minutes);
+      return row;
+    };
+
+    const render = ({ arrivals, updatedAt }: LiveArrivalsResponse) => {
+      states.list.replaceChildren(...arrivals.map(renderRow));
+      const time = new Date(updatedAt).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+      updated.textContent = labels.updated.replace('{time}', time);
+      show(arrivals.length > 0 ? 'list' : 'empty');
+    };
+
+    const load = async () => {
+      if (loading) return;
+      loading = true;
+      clearTimeout(timer);
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        render((await res.json()) as LiveArrivalsResponse);
+      } catch {
+        updated.textContent = '';
+        show('error');
+      } finally {
+        loading = false;
+        root.removeAttribute('aria-busy');
+        // Only keep polling while the tab is visible.
+        if (!document.hidden) timer = window.setTimeout(load, REFRESH_MS);
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearTimeout(timer);
+      else load();
+    });
+    part('retry').addEventListener('click', () => {
+      show('skeleton');
+      load();
+    });
+
+    load();
+  }
+</script>

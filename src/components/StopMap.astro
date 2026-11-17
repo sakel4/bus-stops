@@ -1,0 +1,51 @@
+---
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import type { Stop } from '../lib/stops';
+
+interface Props {
+  lang: Lang;
+  stop: Stop;
+}
+
+const { lang, stop } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<div
+  data-stop-map
+  data-lat={stop.latitude}
+  data-lng={stop.longitude}
+  class="z-0 h-full w-full"
+  role="region"
+  aria-label={t('stop.map')}
+>
+</div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+
+  const container = document.querySelector<HTMLElement>('[data-stop-map]');
+
+  if (container) {
+    const position: L.LatLngTuple = [Number(container.dataset.lat), Number(container.dataset.lng)];
+
+    const map = L.map(container, { preferCanvas: true }).setView(position, 17);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    L.circleMarker(position, {
+      radius: 8,
+      color: '#1d4ed8',
+      weight: 2,
+      fillColor: '#3b82f6',
+      fillOpacity: 0.85,
+    }).addTo(map);
+
+    // The map container may change size (e.g. responsive layout).
+    new ResizeObserver(() => map.invalidateSize()).observe(container);
+  }
+</script>

@@ -1,0 +1,16 @@
+---
+import StopPage from '../../components/StopPage.astro';
+import { getStops, type Stop } from '../../lib/stops';
+
+export function getStaticPaths() {
+  return getStops('el').map((stop) => ({ params: { code: stop.code }, props: { stop } }));
+}
+
+interface Props {
+  stop: Stop;
+}
+
+const { stop } = Astro.props;
+---
+
+<StopPage stop={stop} />

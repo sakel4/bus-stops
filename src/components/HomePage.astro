@@ -3,10 +3,11 @@ import Layout from '../layouts/Layout.astro';
 import StopList from './StopList.astro';
 import StopsMap from './StopsMap.astro';
 import { getLang, useTranslations } from '../i18n/utils';
-import { stops } from '../lib/stops';
+import { getStops } from '../lib/stops';
 
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
+const stops = getStops(lang);
 ---
 
 <Layout>
