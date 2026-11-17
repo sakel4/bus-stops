@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
+import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
 
 // Node's types aren't installed, so read the environment through an untyped globalThis.
@@ -17,6 +18,8 @@ const site =
 
 export default defineConfig({
   site,
+  // Pages are prerendered; only the live arrivals endpoint runs as a Vercel function.
+  adapter: vercel(),
   i18n: {
     locales: ['el', 'en'],
     defaultLocale: 'el',
