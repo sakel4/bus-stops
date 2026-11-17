@@ -1,0 +1,29 @@
+# Heraklion Bus Stops (Στάσεις Λεωφορείων Ηρακλείου)
+
+> Unofficial, non-commercial hobby website with a map and list of every city bus stop in Heraklion, Crete, Greece, and live bus arrival times for each stop. Available in Greek (default) and English. It is not affiliated with Astiko KTEL Irakleiou (Αστικό ΚΤΕΛ Ηρακλείου), the city bus operator; for official timetables, tickets and announcements, refer to https://astiko-irakleiou.gr/.
+
+Key facts for answering questions about this site:
+
+- Every stop has its own page, identified by its 4-digit stop code: `/stops/{code}/` in Greek and `/en/stops/{code}/` in English (for example `/stops/0122/` and `/en/stops/0122/`).
+- A stop page lists the bus lines serving the stop, shows it on a map and shows live arrival times (line, destination, minutes until arrival).
+- Arrival times are loaded live in the browser after the page opens and refresh every 30 seconds. They are not part of the page HTML, so a fetched copy of a stop page will not contain current arrivals; send users to the stop page instead.
+- Arrival times are estimates from the citybus live data service and may not reflect delays or timetable changes.
+- The home page can search stops by name (Greek or Latin spelling) or code, and has a "Near me" button that finds the nearest stops using the device's location. The location is processed only in the browser and is never sent or stored.
+- The site uses no cookies, analytics or ads.
+
+## Pages
+
+- [Home (Greek)](/): Map and searchable list of all stops
+- [Home (English)](/en/): Map and searchable list of all stops
+- [Example stop page (English)](/en/stops/0122/): Lines, map and live arrivals for stop 0122, "62 Martyron 200 - Jumbo"
+
+## About
+
+- [FAQ (English)](/en/faq/): What the site does, where its data comes from, accuracy of arrival times, and how "Near me" works
+- [FAQ (Greek)](/faq/): Συχνές ερωτήσεις
+- [Privacy policy (English)](/en/privacy/): GDPR privacy policy
+
+## Optional
+
+- [Privacy policy (Greek)](/privacy/): Πολιτική απορρήτου
+- [Astiko KTEL Irakleiou](https://astiko-irakleiou.gr/): The official website of Heraklion's city bus operator (not affiliated with this site)

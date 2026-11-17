@@ -19,7 +19,11 @@ export const ui = {
     'stop.code': 'Κωδικός',
     'stop.lines': 'Λεωφορεία',
     'stop.back': 'Όλες οι στάσεις',
-    'stop.description': 'Στάση λεωφορείου {name} ({code}) στο Ηράκλειο. Λεωφορεία: {lines}.',
+    'stop.metaTitle': 'Στάση {name} ({code}) – Αφίξεις λεωφορείων Ηρακλείου',
+    'stop.metaTitleShort': 'Στάση {name} ({code}) – Αφίξεις λεωφορείων',
+    'stop.metaDescription':
+      'Δείτε σε πόσα λεπτά έρχεται το επόμενο λεωφορείο στη στάση {name} ({code}) στο Ηράκλειο. Λεωφορεία: {lines}.',
+    'stop.metaMoreLines': '{lines} και {count} ακόμη',
     'stop.arrivals': 'Αφίξεις',
     'arrivals.now': 'Τώρα',
     'arrivals.minutes': '{count} λεπ.',
@@ -49,6 +53,7 @@ export const ui = {
     'footer.unofficial': 'Ανεπίσημη εφαρμογή',
     'footer.faq': 'Συχνές ερωτήσεις',
     'footer.privacy': 'Απόρρητο',
+    'og.imageAlt': 'Στάσεις Λεωφορείων Ηρακλείου: ζωντανές αφίξεις λεωφορείων',
     'lang.switch': 'Γλώσσα',
   },
   en: {
@@ -62,7 +67,11 @@ export const ui = {
     'stop.code': 'Code',
     'stop.lines': 'Lines',
     'stop.back': 'All stops',
-    'stop.description': 'Bus stop {name} ({code}) in Heraklion. Lines: {lines}.',
+    'stop.metaTitle': '{name} ({code}) Bus Stop – Live Arrivals in Heraklion',
+    'stop.metaTitleShort': '{name} ({code}) Bus Stop – Live Arrivals',
+    'stop.metaDescription':
+      'See how many minutes until the next bus arrives at {name} ({code}) in Heraklion. Lines: {lines}.',
+    'stop.metaMoreLines': '{lines} and {count} more',
     'stop.arrivals': 'Arrivals',
     'arrivals.now': 'Now',
     'arrivals.minutes': '{count} min',
@@ -92,6 +101,7 @@ export const ui = {
     'footer.unofficial': 'Unofficial app',
     'footer.faq': 'FAQ',
     'footer.privacy': 'Privacy',
+    'og.imageAlt': 'Heraklion Bus Stops: live bus arrivals',
     'lang.switch': 'Language',
   },
 } as const satisfies Record<Lang, Record<string, string>>;

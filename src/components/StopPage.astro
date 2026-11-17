@@ -14,14 +14,22 @@ const { stop } = Astro.props;
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
 const name = getStopName(stop, lang);
-const description = t('stop.description', {
-  name,
-  code: stop.code,
-  lines: stop.lineCodes.join(', '),
-});
+
+// Search result snippets are short (~155 characters): list at most 5 lines.
+const MAX_META_LINES = 5;
+const shownLines = stop.lineCodes.slice(0, MAX_META_LINES).join(', ');
+const hiddenLines = stop.lineCodes.length - MAX_META_LINES;
+const lines =
+  hiddenLines > 0 ? t('stop.metaMoreLines', { lines: shownLines, count: hiddenLines }) : shownLines;
+// Google shows about 60 characters of a title; drop the city (it is in the description) when longer.
+const MAX_TITLE_LENGTH = 60;
+const fullTitle = t('stop.metaTitle', { name, code: stop.code });
+const metaTitle =
+  fullTitle.length <= MAX_TITLE_LENGTH ? fullTitle : t('stop.metaTitleShort', { name, code: stop.code });
+const metaDescription = t('stop.metaDescription', { name, code: stop.code, lines });
 ---
 
-<Layout title={name} description={description} path={getStopPath(stop)}>
+<Layout fullTitle={metaTitle} description={metaDescription} path={getStopPath(stop)}>
   <div class="h-full overflow-y-auto">
     <article class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
       <a
