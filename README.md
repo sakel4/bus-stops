@@ -1,0 +1,66 @@
+![Heraklion Bus Stops: live bus arrivals](public/og-image.jpg)
+
+# Heraklion Bus Stops (Στάσεις Λεωφορείων Ηρακλείου)
+
+A map and a list of every city bus stop in Heraklion, Crete, with live arrival times for each stop. Available in Greek and English.
+
+It's a hobby project, built to solve an everyday problem: quickly checking on your phone when the next bus will reach your stop. It's free, has no ads and doesn't track its visitors.
+
+> **Unofficial.** This project has no association with [Astiko KTEL Irakleiou](https://astiko-irakleiou.gr/) (Αστικό ΚΤΕΛ Ηρακλείου), Heraklion's city bus operator, and does not represent it. For official information, timetables, tickets and announcements, please visit their website.
+
+## Features
+
+- **Map and list of all stops.** Search for a stop by name (Greek or Latin spelling) or by its code.
+- **Stop pages.** Every stop has its own page (`/stops/{code}/`, `/en/stops/{code}/`) with the lines serving it, a map and live arrivals.
+- **Live arrivals.** See which line is coming, where it's heading and in how many minutes. Arrival times refresh automatically every 30 seconds while the page is open.
+- **Near me.** Press the button and allow location access to see the 5 nearest stops with their straight-line distance. The nearest stop may be across the street, serving the opposite direction, which is why more than one is shown.
+- **Greek and English** throughout, including stop names and arrival destinations.
+
+## Where the data comes from
+
+The list of stops and the lines serving them is stored in the app (`src/data/stops_el.json`, `src/data/stops_en.json`). Arrival times come in real time from the public citybus data service (rest.citybus.gr).
+
+Arrival times are estimates. Traffic delays or timetable changes may not show up immediately, and the app's data may not always be up to date. The official source for stops, lines and timetables is always the [Astiko KTEL Irakleiou](https://astiko-irakleiou.gr/) website.
+
+## Privacy
+
+No cookies, no analytics and no ads. Your location is only used when you press "Near me", is processed only in your browser and is never sent or stored. Requests to citybus contain only the stop code and language. See the full privacy policy at `/privacy/` (Greek) or `/en/privacy/` (English).
+
+## Development
+
+Built with [Astro](https://astro.build), [Tailwind CSS](https://tailwindcss.com) and [Leaflet](https://leafletjs.com) with OpenStreetMap tiles. Requires Node.js 24 or newer.
+
+```sh
+npm install
+cp .env.example .env   # then set CITYBUS_TOKEN
+npm run dev            # http://localhost:4321
+```
+
+| Command           | What it does                              |
+| ----------------- | ----------------------------------------- |
+| `npm run dev`     | Start the dev server                      |
+| `npm run build`   | Build for production (Vercel output)      |
+| `npx astro check` | Type-check the project                    |
+
+### Environment variables
+
+| Variable        | Required | Purpose                                                                 |
+| --------------- | -------- | ----------------------------------------------------------------------- |
+| `CITYBUS_TOKEN` | Yes      | Bearer token for rest.citybus.gr. Server-only, never sent to the browser. Without it, stop pages show "Arrivals are unavailable". |
+| `SITE_URL`      | No       | Public origin used for absolute URLs (link previews). On Vercel the production domain is used automatically. |
+
+### How it fits together
+
+- All pages (home, 1,070 stop pages, FAQ, privacy) are prerendered as static HTML.
+- The only server code is `src/pages/api/stops/[code]/live.ts`, which proxies `rest.citybus.gr` with the token, caches each stop for 20 seconds and returns a small JSON list of arrivals. The citybus API only allows browser requests from its own site, so arrivals have to go through this endpoint.
+- Text pages (`faq.md`, `privacy.md`) are Markdown under `src/pages/` and `src/pages/en/`; UI strings live in `src/i18n/ui.ts`.
+
+### Deployment
+
+Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Set `CITYBUS_TOKEN` in the project's environment variables. The arrivals function runs in Frankfurt (`fra1`, see `vercel.json`).
+
+## Support the project
+
+This is a free, ad-free hobby project. If it saves you some waiting at the bus stop and you'd like to say thanks, you can buy me a coffee on Ko-fi. It helps cover hosting and keeps the project going.
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sakel4)
