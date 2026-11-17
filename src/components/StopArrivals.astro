@@ -2,6 +2,7 @@
 import type { Lang } from '../i18n/ui';
 import { useTranslations } from '../i18n/utils';
 import { getLiveArrivalsUrl } from '../lib/arrivals';
+import { getLineCodes, getLineUrl } from '../lib/line-routes';
 import type { Stop } from '../lib/stops';
 
 interface Props {
@@ -17,7 +18,11 @@ const labels = {
   now: t('arrivals.now'),
   minutes: t('arrivals.minutes', { count: '{count}' }),
   updated: t('arrivals.updated', { time: '{time}' }),
+  lineLink: t('stop.lineLink', { line: '{line}' }),
 };
+// Line chips link to the line page; only for lines that have one.
+const LINE_CODE = '__line__';
+const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
 ---
 
 <section
@@ -26,6 +31,9 @@ const labels = {
   data-url={getLiveArrivalsUrl(stop, lang)}
   data-lang={lang}
   data-labels={JSON.stringify(labels)}
+  data-line-url={lineUrl}
+  data-line-code={LINE_CODE}
+  data-lines={getLineCodes().join(' ')}
   aria-busy="true"
 >
   <div class="mb-2 flex items-baseline justify-between gap-3">
@@ -64,9 +72,9 @@ const labels = {
 
   <template data-row>
     <li class="flex items-center gap-3 py-2.5">
-      <span
-        class="min-w-12 shrink-0 rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-white"
-        data-line></span>
+      <a
+        class="min-w-12 shrink-0 rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-white shadow-sm transition hover:brightness-125 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:outline-none"
+        data-line></a>
       <span class="min-w-0 flex-1 truncate text-sm" data-destination></span>
       <span class="shrink-0 text-sm font-semibold tabular-nums" data-minutes></span>
     </li>
@@ -84,9 +92,11 @@ const labels = {
     const url = root.dataset.url!;
     const lang = root.dataset.lang;
     const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<
-      'now' | 'minutes' | 'updated',
+      'now' | 'minutes' | 'updated' | 'lineLink',
       string
     >;
+    const knownLines = new Set(root.dataset.lines!.split(' '));
+    const lineUrl = (line: string) => root.dataset.lineUrl!.replace(root.dataset.lineCode!, line);
     const part = (name: string) => root.querySelector<HTMLElement>(`[data-${name}]`)!;
     const states = {
       skeleton: part('skeleton'),
@@ -109,9 +119,14 @@ const labels = {
 
     const renderRow = (arrival: Arrival) => {
       const row = rowTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
-      const line = row.querySelector<HTMLElement>('[data-line]')!;
+      const line = row.querySelector<HTMLAnchorElement>('[data-line]')!;
       line.textContent = arrival.line;
       line.style.backgroundColor = getLineColor(arrival.line);
+      // Without href the chip stays a plain, non-interactive label.
+      if (knownLines.has(arrival.line)) {
+        line.href = lineUrl(arrival.line);
+        line.title = line.ariaLabel = labels.lineLink.replace('{line}', arrival.line);
+      }
       row.querySelector('[data-destination]')!.textContent = arrival.destination;
       row.querySelector('[data-minutes]')!.textContent = formatMinutes(arrival.minutes);
       return row;

@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import StopArrivals from './StopArrivals.astro';
 import StopMap from './StopMap.astro';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
+import { getLineUrl } from '../lib/line-routes';
 import { getLineColor } from '../lib/lines';
 import { getStopName, getStopPath, type Stop } from '../lib/stops';
 
@@ -60,11 +61,16 @@ const metaDescription = t('stop.metaDescription', { name, code: stop.code, lines
         <ul class="flex flex-wrap gap-2">
           {
             stop.lineCodes.map((line) => (
-              <li
-                class="rounded-md px-2.5 py-1 font-mono text-sm font-semibold text-white"
-                style={{ backgroundColor: getLineColor(line) }}
-              >
-                {line}
+              <li>
+                <a
+                  href={getLineUrl(line, lang, stop.code)}
+                  class="block rounded-md px-2.5 py-1 font-mono text-sm font-semibold text-white shadow-sm transition hover:brightness-125 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:outline-none"
+                  style={{ backgroundColor: getLineColor(line) }}
+                  title={t('stop.lineLink', { line })}
+                  aria-label={t('stop.lineLink', { line })}
+                >
+                  {line}
+                </a>
               </li>
             ))
           }

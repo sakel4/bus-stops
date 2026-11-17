@@ -1,0 +1,12 @@
+---
+import LinePage from '../../../components/LinePage.astro';
+import { getLineCodes } from '../../../lib/line-routes';
+
+export function getStaticPaths() {
+  return getLineCodes().map((line) => ({ params: { line } }));
+}
+
+const { line } = Astro.params;
+---
+
+<LinePage line={line} />
