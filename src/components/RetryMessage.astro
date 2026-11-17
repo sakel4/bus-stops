@@ -1,0 +1,20 @@
+---
+// Error message with a "Try again" button; hidden until the page script shows it.
+// The script finds it by [data-error] and the button by [data-retry].
+import { getLang, useTranslations } from '../i18n/utils';
+
+interface Props {
+  message: string;
+  class?: string;
+}
+
+const { message, class: className } = Astro.props;
+const t = useTranslations(getLang(Astro.currentLocale));
+---
+
+<div class={className} role="status" data-error hidden>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-slate-500">{message}</p>
+    <button type="button" class="btn-secondary" data-retry>{t('arrivals.retry')}</button>
+  </div>
+</div>

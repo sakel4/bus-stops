@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import BackLink from './BackLink.astro';
+import RetryMessage from './RetryMessage.astro';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import { getLineDetailsUrl, getLinePath } from '../lib/line-routes';
 import { getLineColor } from '../lib/lines';
@@ -24,9 +26,6 @@ const labels = {
 };
 const STOP_CODE = '__code__';
 const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
-
-const buttonClass =
-  'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none';
 ---
 
 <Layout
@@ -45,19 +44,9 @@ const buttonClass =
       data-labels={JSON.stringify(labels)}
       aria-busy="true"
     >
-      <a
-        href={localizePath(lang)}
-        class="inline-flex items-center gap-1.5 self-start rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
-        data-back
-      >
-        <svg class="size-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path
-            fill-rule="evenodd"
-            d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
-            clip-rule="evenodd"></path>
-        </svg>
+      <BackLink href={localizePath(lang)} data-back>
         <span data-back-label>{t('stop.back')}</span>
-      </a>
+      </BackLink>
 
       <header class="flex items-center gap-3">
         <span
@@ -75,17 +64,10 @@ const buttonClass =
         </div>
       </header>
 
-      <div class="hidden" role="status" data-error>
-        <div
-          class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-        >
-          <p class="text-sm text-slate-500">{t('line.error')}</p>
-          <button type="button" class={buttonClass} data-retry>{t('arrivals.retry')}</button>
-        </div>
-      </div>
+      <RetryMessage class="card p-4" message={t('line.error')} />
 
       <div class="flex flex-col gap-4" data-content>
-        <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <section class="card p-4">
           <label for="line-route" class="mb-2 block font-semibold">{t('line.route')}</label>
           <select
             id="line-route"
@@ -94,11 +76,11 @@ const buttonClass =
             data-route></select>
         </section>
 
-        <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <section class="card overflow-hidden">
           <div class="h-80 bg-slate-100" data-line-map role="region" aria-label={t('line.map')}></div>
         </section>
 
-        <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <section class="card p-4">
           <div class="mb-2 flex items-baseline justify-between gap-3">
             <h2 class="font-semibold">{t('line.stops')}</h2>
             <p class="text-xs text-slate-500" data-stop-count></p>
@@ -115,7 +97,7 @@ const buttonClass =
             }
           </ul>
 
-          <ol class="hidden" data-stops></ol>
+          <ol data-stops hidden></ol>
         </section>
       </div>
 
@@ -134,8 +116,9 @@ const buttonClass =
             <span class="min-w-0">
               <span class="break-words" data-name></span>
               <span
-                class="ml-1 hidden rounded bg-blue-600 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white"
-                data-this-stop></span>
+                class="ml-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white"
+                data-this-stop
+                hidden></span>
             </span>
             <span class="shrink-0 font-mono text-xs text-slate-500" data-code></span>
           </a>
@@ -147,7 +130,7 @@ const buttonClass =
 
 <script>
   import L from 'leaflet';
-  import 'leaflet/dist/leaflet.css';
+  import { createMap, stopPopupHtml } from '../lib/map';
   import type { LineDetailsResponse, LineRoute } from '../lib/line-routes';
 
   const root = document.querySelector<HTMLElement>('[data-line-page]');
@@ -180,18 +163,10 @@ const buttonClass =
     let map: L.Map | undefined;
     let routeLayer: L.FeatureGroup | undefined;
 
-    const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-
     const drawMap = (route: LineRoute) => {
       if (!map) {
-        map = L.map(part('line-map'), { preferCanvas: true });
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        }).addTo(map);
+        map = createMap(part('line-map'));
         routeLayer = L.featureGroup().addTo(map);
-        const resizeMap = map;
-        new ResizeObserver(() => resizeMap.invalidateSize()).observe(part('line-map'));
       }
       routeLayer!.clearLayers();
 
@@ -206,11 +181,12 @@ const buttonClass =
           fillOpacity: 1,
         })
           .bindPopup(
-            `<strong>${escape(stop.name)}</strong><br>` +
-              `${escape(labels.code)}: ${escape(stop.code)}<br>` +
-              // `!` so Tailwind wins over Leaflet's `.leaflet-container a` color.
-              `<a href="${escape(stopUrl(stop.code))}" class="mt-2 inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white! no-underline! transition-colors hover:bg-blue-700">` +
-              `${escape(labels.details)} <span aria-hidden="true">›</span></a>`,
+            stopPopupHtml({
+              name: stop.name,
+              details: [`${labels.code}: ${stop.code}`],
+              url: stopUrl(stop.code),
+              linkLabel: labels.details,
+            }),
           )
           .addTo(routeLayer!);
       }
@@ -234,7 +210,7 @@ const buttonClass =
         link.classList.add('bg-blue-50', 'font-semibold');
         const badge = row.querySelector<HTMLElement>('[data-this-stop]')!;
         badge.textContent = labels.thisStop;
-        badge.classList.remove('hidden');
+        badge.hidden = false;
       }
       row.querySelector('[data-name]')!.textContent = stop.name;
       row.querySelector('[data-code]')!.textContent = stop.code;
@@ -270,14 +246,14 @@ const buttonClass =
         showRoute(route);
       };
 
-      part('skeleton').classList.add('hidden');
-      stopList.classList.remove('hidden');
+      part('skeleton').hidden = true;
+      stopList.hidden = false;
       showRoute(initial);
     };
 
     const load = async () => {
-      part('error').classList.add('hidden');
-      part('content').classList.remove('hidden');
+      part('error').hidden = true;
+      part('content').hidden = false;
       root.setAttribute('aria-busy', 'true');
       try {
         const res = await fetch(root.dataset.url!);
@@ -285,8 +261,8 @@ const buttonClass =
         render((await res.json()) as LineDetailsResponse);
       } catch {
         part('line-name').textContent = '';
-        part('content').classList.add('hidden');
-        part('error').classList.remove('hidden');
+        part('content').hidden = true;
+        part('error').hidden = false;
       } finally {
         root.removeAttribute('aria-busy');
       }

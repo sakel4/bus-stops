@@ -12,8 +12,17 @@ const { lang, path = '' } = Astro.props;
 const t = useTranslations(lang);
 ---
 
-<nav aria-label={t('lang.switch')}>
-  <ul class="flex gap-1 text-sm">
+<!-- Segmented control: the current language is a white pill. Never shrinks, so it stays on one line. -->
+<nav aria-label={t('lang.switch')} class="shrink-0">
+  <ul class="flex items-center gap-0.5 rounded-full bg-blue-900/40 p-1 ring-1 ring-white/15 ring-inset">
+    <li class="hidden pr-1 pl-1.5 text-blue-200 sm:block" aria-hidden="true">
+      <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM4.04 7.5a6.52 6.52 0 0 0 0 5h2.53a15.6 15.6 0 0 1 0-5H4.04Zm.84-1.5h2.04c.3-1.2.74-2.27 1.29-3.13A6.52 6.52 0 0 0 4.88 6Zm3.58 0h3.08A8.9 8.9 0 0 0 10 3.55 8.9 8.9 0 0 0 8.46 6Zm3.42 1.5H8.12a14.1 14.1 0 0 0 0 5h3.76a14.1 14.1 0 0 0 0-5Zm1.55 5h2.53a6.52 6.52 0 0 0 0-5h-2.53a15.6 15.6 0 0 1 0 5Zm1.69 1.5h-2.04c-.3 1.2-.74 2.27-1.29 3.13A6.52 6.52 0 0 0 15.12 14Zm-3.58 0H8.46A8.9 8.9 0 0 0 10 16.45 8.9 8.9 0 0 0 11.54 14Zm-4.62 0H4.88a6.52 6.52 0 0 0 3.33 3.13A11.5 11.5 0 0 1 6.92 14Zm6.16-8h2.04a6.52 6.52 0 0 0-3.33-3.13c.55.86.99 1.93 1.29 3.13Z"
+          clip-rule="evenodd"></path>
+      </svg>
+    </li>
     {
       (Object.keys(languages) as Lang[]).map((code) => (
         <li>
@@ -21,12 +30,13 @@ const t = useTranslations(lang);
             href={localizePath(code, path)}
             hreflang={code}
             lang={code}
+            title={languages[code]}
             aria-current={code === lang ? 'page' : undefined}
             class:list={[
-              'rounded-md px-2 py-1 font-medium transition-colors',
+              'block rounded-full px-3 py-1 text-xs font-semibold tracking-wide whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none',
               code === lang
-                ? 'bg-white/20 text-white'
-                : 'text-blue-100 hover:bg-white/10 hover:text-white',
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-blue-100 hover:bg-white/15 hover:text-white',
             ]}
           >
             {code.toUpperCase()}

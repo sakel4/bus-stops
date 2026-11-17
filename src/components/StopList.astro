@@ -23,9 +23,6 @@ const locateLabels = {
   denied: t('locate.denied'),
   unavailable: t('locate.unavailable'),
 };
-
-const secondaryButton =
-  'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none';
 ---
 
 <section
@@ -62,7 +59,7 @@ const secondaryButton =
       <!-- Shown by the script only where the browser supports geolocation. -->
       <button
         type="button"
-        class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
+        class="btn-secondary inline-flex shrink-0 items-center gap-1.5"
         title={t('locate.label')}
         data-locate
         hidden
@@ -88,16 +85,16 @@ const secondaryButton =
       </p>
       <p class="mt-1 text-xs text-slate-500" data-locate-note hidden></p>
       <div class="mt-2 flex flex-wrap gap-2">
-        <button type="button" class={secondaryButton} data-locate-action="cancel" hidden>
+        <button type="button" class="btn-secondary" data-locate-action="cancel" hidden>
           {t('locate.cancel')}
         </button>
-        <button type="button" class={secondaryButton} data-locate-action="retry" hidden>
+        <button type="button" class="btn-secondary" data-locate-action="retry" hidden>
           {t('locate.retry')}
         </button>
-        <button type="button" class={secondaryButton} data-locate-action="reset" hidden>
+        <button type="button" class="btn-secondary" data-locate-action="reset" hidden>
           {t('locate.showAll')}
         </button>
-        <button type="button" class={secondaryButton} data-locate-action="close" hidden>
+        <button type="button" class="btn-secondary" data-locate-action="close" hidden>
           {t('locate.close')}
         </button>
       </div>
@@ -144,7 +141,7 @@ const secondaryButton =
       })
     }
   </ul>
-  <p class="hidden flex-1 bg-white p-6 text-center text-sm text-slate-500" data-empty>
+  <p class="flex-1 bg-white p-6 text-center text-sm text-slate-500" data-empty hidden>
     {t('list.empty')}
   </p>
 </section>
@@ -172,8 +169,8 @@ const secondaryButton =
 
     const setCount = (n: number) => {
       count.textContent = countTemplate.replace('{count}', String(n));
-      empty.classList.toggle('hidden', n > 0);
-      list.classList.toggle('hidden', n === 0);
+      empty.hidden = n > 0;
+      list.hidden = n === 0;
     };
 
     const applyFilter = () => {

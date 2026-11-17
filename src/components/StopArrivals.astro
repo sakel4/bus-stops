@@ -3,6 +3,7 @@ import type { Lang } from '../i18n/ui';
 import { useTranslations } from '../i18n/utils';
 import { getLiveArrivalsUrl } from '../lib/arrivals';
 import { getLineCodes, getLineUrl } from '../lib/line-routes';
+import RetryMessage from './RetryMessage.astro';
 import type { Stop } from '../lib/stops';
 
 interface Props {
@@ -26,7 +27,7 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
 ---
 
 <section
-  class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+  class="card p-4"
   data-stop-arrivals
   data-url={getLiveArrivalsUrl(stop, lang)}
   data-lang={lang}
@@ -53,28 +54,15 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     }
   </ul>
 
-  <ul class="hidden divide-y divide-slate-100" data-list></ul>
+  <ul class="divide-y divide-slate-100" data-list hidden></ul>
 
-  <p class="hidden text-sm text-slate-500" role="status" data-empty>{t('arrivals.empty')}</p>
+  <p class="text-sm text-slate-500" role="status" data-empty hidden>{t('arrivals.empty')}</p>
 
-  <div class="hidden" role="status" data-error>
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <p class="text-sm text-slate-500">{t('arrivals.error')}</p>
-      <button
-        type="button"
-        class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
-        data-retry
-      >
-        {t('arrivals.retry')}
-      </button>
-    </div>
-  </div>
+  <RetryMessage message={t('arrivals.error')} />
 
   <template data-row>
     <li class="flex items-center gap-3 py-2.5">
-      <a
-        class="min-w-12 shrink-0 rounded-md px-2 py-1 text-center font-mono text-sm font-semibold text-white shadow-sm transition hover:brightness-125 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:outline-none"
-        data-line></a>
+      <a class="line-chip min-w-12 shrink-0 px-2 py-1 text-center" data-line></a>
       <span class="min-w-0 flex-1 truncate text-sm" data-destination></span>
       <span class="shrink-0 text-sm font-semibold tabular-nums" data-minutes></span>
     </li>
@@ -111,7 +99,7 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     let loading = false;
 
     const show = (state: keyof typeof states) => {
-      for (const [name, el] of Object.entries(states)) el.classList.toggle('hidden', name !== state);
+      for (const [name, el] of Object.entries(states)) el.hidden = name !== state;
     };
 
     const formatMinutes = (minutes: number) =>
