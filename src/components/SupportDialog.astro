@@ -1,0 +1,99 @@
+---
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import { KOFI_URL } from '../lib/support';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<!-- Footer link: opens the dialog below. Without JavaScript it goes straight to Ko-fi. -->
+<a
+  href={KOFI_URL}
+  target="_blank"
+  rel="noopener"
+  class="inline-flex items-center gap-1 hover:text-slate-900 hover:underline"
+  data-support-open
+>
+  <svg class="size-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <path
+      d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z"
+    ></path>
+  </svg>
+  {t('support.link')}
+</a>
+
+<dialog
+  class="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl bg-white p-0 text-slate-700 shadow-xl backdrop:bg-slate-900/50"
+  aria-labelledby="support-title"
+  closedby="any"
+  data-support-dialog
+>
+  <div class="p-6">
+    <div class="flex items-start justify-between gap-4">
+      <h2 id="support-title" class="flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <svg class="size-5 text-rose-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z"
+          ></path>
+        </svg>
+        {t('support.title')}
+      </h2>
+      <form method="dialog">
+        <button
+          class="-m-2 grid size-9 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
+          aria-label={t('support.close')}
+        >
+          <svg class="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+            ></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-3 space-y-3 text-sm leading-relaxed">
+      <p class="font-medium text-slate-900">{t('support.free')}</p>
+      <p>{t('support.costs')}</p>
+      <p>{t('support.optional')}</p>
+    </div>
+
+    <a
+      href={KOFI_URL}
+      target="_blank"
+      rel="noopener"
+      class="mt-5 flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-600 focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 focus-visible:outline-none"
+    >
+      <!-- Coffee cup, as on Ko-fi. -->
+      <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+        <path d="M6 2v2M10 2v2M14 2v2"></path>
+      </svg>
+      {t('support.donate')}
+    </a>
+    <p class="mt-2 text-center text-xs text-slate-500">{t('support.external')}</p>
+  </div>
+</dialog>
+
+<script>
+  const open = document.querySelector<HTMLAnchorElement>('[data-support-open]');
+  const dialog = document.querySelector<HTMLDialogElement>('[data-support-dialog]');
+
+  if (open && dialog && typeof dialog.showModal === 'function') {
+    open.addEventListener('click', (event) => {
+      event.preventDefault();
+      dialog.showModal();
+    });
+    // Close on a click on the backdrop, for browsers without closedby="any". The content is
+    // wrapped in a padded div, so only backdrop clicks land on the dialog element itself.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+</script>
