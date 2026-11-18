@@ -11,7 +11,7 @@ Key facts for answering questions about this site:
 - Line names, routes and stop order are also loaded in the browser and are not part of the line page HTML.
 - Arrival times are estimates from the citybus live data service and may not reflect delays or timetable changes.
 - The home page can search stops by name (Greek or Latin spelling) or code, and has a "Near me" button that finds the nearest stops using the device's location. The location is processed only in the browser and is never sent or stored.
-- The site uses no cookies, analytics or ads.
+- The site uses no cookies or ads. It measures traffic with cookieless, anonymous and aggregated Vercel Web Analytics.
 
 ## Pages
 

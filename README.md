@@ -25,7 +25,7 @@ Arrival times are estimates. Traffic delays or timetable changes may not show up
 
 ## Privacy
 
-No cookies, no analytics and no ads. Your location is only used when you press "Near me", is processed only in your browser and is never sent or stored. Requests to citybus contain only the stop code and language. See the full privacy policy at `/privacy/` (Greek) or `/en/privacy/` (English).
+No cookies and no ads. Traffic is measured with cookieless, aggregated Vercel Web Analytics. Your location is only used when you press "Near me", is processed only in your browser and is never sent or stored. Requests to citybus contain only the stop code and language. See the full privacy policy at `/privacy/` (Greek) or `/en/privacy/` (English).
 
 ## Development
 
