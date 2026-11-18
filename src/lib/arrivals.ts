@@ -12,6 +12,11 @@ export interface Arrival {
   position: [number, number] | null;
 }
 
+/** Detail of the 'stop:arrivals' event StopArrivals.astro sends to the stop map; `time` is e.g. '5 min'. */
+export interface StopArrivalsDetail {
+  arrivals: (Arrival & { time: string })[];
+}
+
 /** Body of GET /api/stops/{code}/live. */
 export interface LiveArrivalsResponse {
   arrivals: Arrival[];

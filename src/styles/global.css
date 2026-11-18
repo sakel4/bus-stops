@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Centered column holding the content of the stop, line and schedules pages. */
+@utility page-content {
+  @apply mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6;
+}
+
+/* Text input or select (stop search, route picker). Same focus ring as btn-secondary. */
+@utility form-field {
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none;
+}
+
 /* White panel used for the sections of the stop and line pages. */
 @utility card {
   @apply rounded-lg border border-slate-200 bg-white shadow-sm;

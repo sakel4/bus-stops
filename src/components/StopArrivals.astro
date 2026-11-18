@@ -70,7 +70,8 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
 </section>
 
 <script>
-  import type { Arrival, LiveArrivalsResponse } from '../lib/arrivals';
+  import type { Arrival, LiveArrivalsResponse, StopArrivalsDetail } from '../lib/arrivals';
+  import { fetchJson, partOf, poll } from '../lib/dom';
   import { getLineColor } from '../lib/lines';
 
   const REFRESH_MS = 30_000;
@@ -85,7 +86,7 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     >;
     const knownLines = new Set(root.dataset.lines!.split(' '));
     const lineUrl = (line: string) => root.dataset.lineUrl!.replace(root.dataset.lineCode!, line);
-    const part = (name: string) => root.querySelector<HTMLElement>(`[data-${name}]`)!;
+    const part = partOf(root);
     const states = {
       skeleton: part('skeleton'),
       list: part('list'),
@@ -94,9 +95,6 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     };
     const updated = part('updated');
     const rowTemplate = root.querySelector<HTMLTemplateElement>('template[data-row]')!;
-
-    let timer: number | undefined;
-    let loading = false;
 
     const show = (state: keyof typeof states) => {
       for (const [name, el] of Object.entries(states)) el.hidden = name !== state;
@@ -120,44 +118,41 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
       return row;
     };
 
+    const sendToMap = (arrivals: Arrival[]) => {
+      const detail: StopArrivalsDetail = {
+        arrivals: arrivals.map((a) => ({ ...a, time: formatMinutes(a.minutes) })),
+      };
+      window.dispatchEvent(new CustomEvent('stop:arrivals', { detail }));
+    };
+
     const render = ({ arrivals, updatedAt }: LiveArrivalsResponse) => {
       states.list.replaceChildren(...arrivals.map(renderRow));
       const time = new Date(updatedAt).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
       updated.textContent = labels.updated.replace('{time}', time);
       show(arrivals.length > 0 ? 'list' : 'empty');
       // The stop map (StopMap.astro) shows where these buses are.
-      window.dispatchEvent(new CustomEvent('stop:arrivals', { detail: { arrivals } }));
+      sendToMap(arrivals);
     };
 
     const load = async () => {
-      if (loading) return;
-      loading = true;
-      clearTimeout(timer);
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        render((await res.json()) as LiveArrivalsResponse);
+        render(await fetchJson<LiveArrivalsResponse>(url));
       } catch {
         updated.textContent = '';
         show('error');
-        window.dispatchEvent(new CustomEvent('stop:arrivals', { detail: { arrivals: [] } }));
+        sendToMap([]);
       } finally {
-        loading = false;
         root.removeAttribute('aria-busy');
-        // Only keep polling while the tab is visible.
-        if (!document.hidden) timer = window.setTimeout(load, REFRESH_MS);
       }
     };
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) clearTimeout(timer);
-      else load();
-    });
+    // Refreshes while the tab is visible.
+    const refresh = poll(load, REFRESH_MS);
     part('retry').addEventListener('click', () => {
       show('skeleton');
-      load();
+      refresh();
     });
 
-    load();
+    refresh();
   }
 </script>
