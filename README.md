@@ -18,6 +18,7 @@ It's a hobby project, built to solve an everyday problem: quickly checking on yo
 - **Live arrivals.** See which line is coming, where it's heading and in how many minutes. Arrival times refresh automatically every 30 seconds while the page is open.
 - **Favourites.** Tap the star next to a stop in the list, or on its page, to save it. The home page opens on your favourites, and the star in the header takes you back to them from any page. They are saved only in your browser.
 - **Near me.** Press the button and allow location access to see the 5 nearest stops with their straight-line distance. The nearest stop may be across the street, serving the opposite direction, which is why more than one is shown.
+- **Installable app (PWA).** Add it to the home screen to open it full screen. The app's files and recently visited pages are saved on the device, so it opens fast and works with a weak or no connection (arrivals still need one).
 - **Greek and English** throughout, including stop names and arrival destinations.
 
 ## Where the data comes from
@@ -60,6 +61,33 @@ npm run dev            # http://localhost:4321
   - `src/pages/api/stops/[code]/live.ts` caches each stop for 20 seconds and returns a small JSON list of arrivals.
   - `src/pages/api/lines/[line].ts` fetches a line and the points of its routes, orders each route's stops along its path, and returns compact JSON. It's cached for an hour.
 - Text pages (`faq.md`, `privacy.md`) are Markdown under `src/pages/` and `src/pages/en/`; UI strings live in `src/i18n/ui.ts`.
+
+### Service worker (PWA)
+
+`public/sw.js` is a small hand-written service worker, registered from `src/layouts/Layout.astro` in production builds only:
+
+| Request | Strategy | Why |
+| --- | --- | --- |
+| `/_astro/*`, images | Cache first | Hashed file names change on every build, so a saved copy never goes stale |
+| Pages | Network first, saved copy after 4 s or offline | Always fresh online; opens on a weak signal; keeps the 30 most recent pages |
+| `/api/*`, other sites | Not handled | Live arrivals must never be stale; OpenStreetMap discourages storing tiles |
+
+When offline with no saved copy, it shows `/offline/` (or `/en/offline/`), saved when the service worker installs. `vercel.json` serves `sw.js` with `Cache-Control: no-cache`, so a new version reaches users on their next visit; bump `VERSION` in it to reset every cache.
+
+The manifests are `public/manifest.webmanifest` (Greek) and `public/en/manifest.webmanifest` (English). Both use the same `id`, so they install as one app that opens in the language it was installed from.
+
+**Removing it:** if a release ever misbehaves, replace `public/sw.js` with the following and deploy. Each browser deletes the caches and drops the service worker on its next visit.
+
+```js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    for (const key of await caches.keys()) await caches.delete(key);
+    await self.registration.unregister();
+    for (const client of await self.clients.matchAll()) client.navigate(client.url);
+  })());
+});
+```
 
 ### Deployment
 

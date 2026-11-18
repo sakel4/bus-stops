@@ -1,0 +1,32 @@
+---
+// Shown by the service worker (public/sw.js) when there's no connection and the requested page
+// isn't saved on the device. It's saved when the service worker installs, so it has to work
+// without the network: the CSS is inlined, and nothing here needs JavaScript but the reload.
+import Layout from '../layouts/Layout.astro';
+import { getLang, localizePath, useTranslations } from '../i18n/utils';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+---
+
+<Layout title={t('offline.title')} path="offline" noindex>
+  <div class="h-full overflow-y-auto">
+    <div class="page-content items-center py-16 text-center">
+      <svg class="size-12 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76M8.5 16.43a5 5 0 0 1 7 0M12 20h.01M2 2l20 20"></path>
+      </svg>
+      <h1 class="text-2xl font-semibold">{t('offline.title')}</h1>
+      <p class="max-w-md text-slate-600">{t('offline.text')}</p>
+      <p class="max-w-md text-sm text-slate-500">{t('offline.hint')}</p>
+      <div class="flex flex-wrap justify-center gap-2">
+        <button type="button" class="btn-secondary" data-offline-retry>{t('offline.retry')}</button>
+        <a href={localizePath(lang)} class="btn-secondary">{t('offline.home')}</a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // The service worker answers the original URL with this page, so a reload tries it again.
+  document.querySelector('[data-offline-retry]')?.addEventListener('click', () => location.reload());
+</script>
