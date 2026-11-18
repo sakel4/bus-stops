@@ -22,7 +22,8 @@ const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.title')}` : t('si
 // Link previews (Facebook, Instagram DMs, X/Twitter, Discord, chat apps). These need absolute URLs.
 const ogLocales: Record<Lang, string> = { el: 'el_GR', en: 'en_US' };
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
-const imageUrl = new URL('/og-image.jpg', Astro.site).href;
+// Bump `v` whenever og-image.jpg changes: Facebook, Discord and X cache previews by URL.
+const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
 ---
 
 <!doctype html>
@@ -31,7 +32,10 @@ const imageUrl = new URL('/og-image.jpg', Astro.site).href;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1d4ed8" />
 
     <meta property="og:type" content="website" />
@@ -64,7 +68,7 @@ const imageUrl = new URL('/og-image.jpg', Astro.site).href;
     <header class="bg-blue-700 text-white shadow">
       <div class="flex items-center justify-between gap-4 px-4 py-3">
         <a href={localizePath(lang)} class="flex items-center gap-2 text-lg font-semibold">
-          <img src="/favicon.svg" alt="" class="size-7" />
+          <img src="/icon-192.png" alt="" width="28" height="28" class="size-7" />
           {t('site.title')}
         </a>
         <div class="flex shrink-0 items-center gap-2">
