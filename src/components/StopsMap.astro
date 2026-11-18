@@ -137,6 +137,8 @@ const mapData = {
     window.addEventListener('stops:filter', (event) => {
       const codes = (event as CustomEvent<{ codes: string[] | null }>).detail.codes;
       const visible = codes ? new Set(codes) : null;
+      // The map may have just changed size (it shrinks on phones during "near me").
+      map.invalidateSize();
 
       for (const [code, marker] of markers) {
         const show = !visible || visible.has(code);
@@ -162,6 +164,7 @@ const mapData = {
         }>
       ).detail;
 
+      map.invalidateSize();
       userLayer.clearLayers();
       if (!position) {
         map.closePopup();

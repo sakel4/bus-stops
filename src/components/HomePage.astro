@@ -12,8 +12,11 @@ const stops = getStops(lang);
 
 <Layout map>
   <h1 class="sr-only">{t('home.heading')}</h1>
-  <div class="flex h-full flex-col md:flex-row">
-    <div class="h-[45vh] shrink-0 md:order-2 md:h-full md:flex-1">
+  <!-- Phones: svh, not vh. In iOS Safari vh is the height with the toolbars hidden, so a vh map
+       is taller than intended when the page opens. home-map shrinks while "near me" is active
+       (global.css) to leave room for the results. -->
+  <div class="home-layout flex h-full flex-col md:flex-row">
+    <div class="home-map h-[32svh] shrink-0 md:order-2 md:h-full md:flex-1">
       <StopsMap lang={lang} stops={stops} />
     </div>
     <aside
