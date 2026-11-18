@@ -10,6 +10,8 @@ Key facts for answering questions about this site:
 - Every bus line has its own page, identified by its 2-digit line code: `/lines/{line}/` in Greek and `/en/lines/{line}/` in English (for example `/en/lines/06/`). It shows the line's route on a map and its stops in order; lines with several routes have a route picker. Stop pages link to the line pages of the lines serving them.
 - Line names, routes and stop order are also loaded in the browser and are not part of the line page HTML.
 - Arrival times are estimates from the citybus live data service and may not reflect delays or timetable changes.
+- Destination pages list the lines and stops for popular places: `/en/destinations/{slug}/` (and `/destinations/{slug}/` in Greek) for `airport`, `knossos`, `port`, `intercity-bus-station`, `pagni-hospital`, `university-of-crete`, `hellenic-mediterranean-university` and `ammoudara`. An index is at `/en/destinations/`. The lines listed are those serving the destination's stops in the site's stop data; not every line runs every trip or every day.
+- The timetables page (`/en/schedules/`, `/schedules/`) links to the operator's official timetable PDFs for each line and day.
 - The home page can search stops by name (Greek or Latin spelling) or code, and has a "Near me" button that finds the nearest stops using the device's location. The location is processed only in the browser and is never sent or stored.
 - The site uses no cookies or ads. It measures traffic with cookieless, anonymous and aggregated Vercel Web Analytics.
 
@@ -19,6 +21,10 @@ Key facts for answering questions about this site:
 - [Home (English)](/en/): Map and searchable list of all stops
 - [Example stop page (English)](/en/stops/0122/): Lines, map and live arrivals for stop 0122, "62 Martyron 200 - Jumbo"
 - [Example line page (English)](/en/lines/06/): Route map and ordered stops of line 06 (Amoudara)
+- [Destinations (English)](/en/destinations/): Which lines and stops serve the airport, Knossos, the port, the KTEL intercity bus station, PAGNI hospital, the universities and Ammoudara
+- [Bus to Heraklion Airport (English)](/en/destinations/airport/): Lines and stops for the airport
+- [Bus to Knossos (English)](/en/destinations/knossos/): Lines and stops for the Palace of Knossos
+- [Timetables (English)](/en/schedules/): Links to the official timetable PDF of every line
 
 ## About
 

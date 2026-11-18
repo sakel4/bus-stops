@@ -6,6 +6,7 @@ import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import { getLineCodes, getLineUrl } from '../lib/line-routes';
 import { getLineColor } from '../lib/lines';
 import { DAYS, SCHEDULE_LINES } from '../lib/schedules';
+import { breadcrumbJsonLd } from '../lib/seo';
 
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
@@ -22,6 +23,7 @@ const labels = {
   fullTitle={t('schedules.metaTitle')}
   description={t('schedules.metaDescription')}
   path="schedules"
+  jsonLd={breadcrumbJsonLd(lang, Astro.site, [[t('schedules.title'), localizePath(lang, 'schedules')]])}
 >
   <div class="h-full overflow-y-auto">
     <article

@@ -1,0 +1,111 @@
+---
+// Landing page for a popular destination (src/lib/destinations.ts): which lines go there and from
+// which stops. All of it is in the HTML, so search engines see the full page.
+import Layout from '../layouts/Layout.astro';
+import BackLink from './BackLink.astro';
+import StopRow from './DestinationStopRow.astro';
+import { getLang, localizePath, useTranslations } from '../i18n/utils';
+import {
+  getDestinationDetails,
+  getDestinationPath,
+  getDestinationUrl,
+  type Destination,
+} from '../lib/destinations';
+import { formatDistance } from '../lib/geo';
+import { getLineUrl } from '../lib/line-routes';
+import { getLineColor } from '../lib/lines';
+import { SCHEDULE_LINES } from '../lib/schedules';
+import { breadcrumbJsonLd, busStopJsonLd } from '../lib/seo';
+
+interface Props {
+  destination: Destination;
+}
+
+const { destination } = Astro.props;
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+const { stops, nearby, lineCodes, centreMeters } = getDestinationDetails(destination, lang);
+const to = destination.to[lang];
+const title = t('destination.title', { to });
+const lineNames = new Map(SCHEDULE_LINES.map((line) => [line.code, line.name[lang]]));
+
+const jsonLd = [
+  breadcrumbJsonLd(lang, Astro.site, [
+    [t('destinations.title'), localizePath(lang, getDestinationPath())],
+    [destination.name[lang], getDestinationUrl(destination.slug, lang)],
+  ]),
+  ...stops.map((stop) => busStopJsonLd(stop, lang, Astro.site)),
+];
+---
+
+<Layout
+  fullTitle={t('destination.metaTitle', { to })}
+  description={t('destination.metaDescription', { to })}
+  path={getDestinationPath(destination.slug)}
+  jsonLd={jsonLd}
+>
+  <div class="h-full overflow-y-auto">
+    <article class="page-content">
+      <BackLink href={localizePath(lang, getDestinationPath())}>{t('destinations.back')}</BackLink>
+
+      <header>
+        <h1 class="text-2xl font-semibold">{title}</h1>
+        <p class="mt-2 text-slate-700">{destination.about[lang]}</p>
+        <p class="mt-1 text-sm text-slate-500">
+          {t('destination.distance', { distance: formatDistance(centreMeters, lang) })}
+        </p>
+      </header>
+
+      <section class="card p-4">
+        <h2 class="font-semibold">{t('destination.lines')}</h2>
+        <p class="mt-1 mb-3 text-sm text-slate-500">{t('destination.linesIntro')}</p>
+        <ul class="flex flex-col gap-2">
+          {
+            lineCodes.map((line) => (
+              <li class="flex items-center gap-3">
+                <a
+                  href={getLineUrl(line, lang)}
+                  class="line-chip block w-12 shrink-0 px-2.5 py-1 text-center"
+                  style={{ backgroundColor: getLineColor(line) }}
+                  aria-label={t('stop.lineLink', { line })}
+                >
+                  {line}
+                </a>
+                <span class="text-sm text-slate-700">{lineNames.get(line) ?? t('line.title', { line })}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="card p-4">
+        <h2 class="font-semibold">{t('destination.stops')}</h2>
+        <p class="mt-1 mb-3 text-sm text-slate-500">{t('destination.stopsIntro')}</p>
+        <ul class="divide-y divide-slate-100">
+          {stops.map((stop) => <StopRow lang={lang} stop={stop} />)}
+        </ul>
+      </section>
+
+      {
+        nearby.length > 0 && (
+          <section class="card p-4">
+            <h2 class="mb-3 font-semibold">{t('destination.nearby')}</h2>
+            <ul class="divide-y divide-slate-100">
+              {nearby.map(({ stop, meters }) => (
+                <StopRow lang={lang} stop={stop} distance={formatDistance(meters, lang)} />
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      <section class="flex flex-col gap-3 text-sm text-slate-500">
+        <p>{t('destination.note')}</p>
+        <a href={localizePath(lang, 'schedules')} class="btn-secondary self-start">
+          {t('destination.timetables')}
+        </a>
+      </section>
+    </article>
+  </div>
+</Layout>
+

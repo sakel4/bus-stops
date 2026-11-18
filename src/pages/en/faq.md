@@ -3,6 +3,7 @@ layout: ../../layouts/ProseLayout.astro
 title: Frequently asked questions
 description: What the HopOn Heraklion bus stops app does, where its data comes from and who makes it.
 path: faq
+faq: true
 ---
 
 ## What is this app?
