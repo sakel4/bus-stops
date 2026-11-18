@@ -29,6 +29,33 @@
   }
 }
 
+/* White scroll area with a shadow at the edge that has more content, so it reads as scrollable.
+   The white "covers" scroll with the content and hide the fixed shadows once an end is reached. */
+@utility scroll-shadows {
+  background:
+    linear-gradient(#fff 30%, rgb(255 255 255 / 0)) center top,
+    linear-gradient(rgb(255 255 255 / 0), #fff 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, rgb(15 23 42 / 0.18), transparent) center top,
+    radial-gradient(farthest-side at 50% 100%, rgb(15 23 42 / 0.18), transparent) center bottom;
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-size:
+    100% 40px,
+    100% 40px,
+    100% 14px,
+    100% 14px;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/* --- Home page ----------------------------------------------------------------- */
+
+/* Phones: a smaller map while the "near me" box is open, so the nearest stops fit below it. */
+@media (width < 48rem) {
+  .home-layout:has([data-locate-status]:not([hidden])) .home-map {
+    height: 22svh;
+  }
+}
+
 /* --- Maps (src/lib/map.ts) --------------------------------------------------- */
 
 /* Calmer OpenStreetMap tiles, so stops, routes and buses stand out. */
