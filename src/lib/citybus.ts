@@ -4,7 +4,7 @@ import { CITYBUS_TOKEN } from 'astro:env/server';
 import type { Lang } from '../i18n/ui';
 import type { Arrival } from './arrivals';
 import { positionAlongPath } from './geo';
-import type { LineDetailsResponse, LineRoute } from './line-routes';
+import type { LineDetailsResponse, LineRoute, LiveVehicle } from './line-routes';
 import { getStopName, getStops } from './stops';
 
 const API_URL = 'https://rest.citybus.gr/api/v1';
@@ -17,6 +17,11 @@ const TIMEOUT_MS = 8_000;
 
 interface LiveArrivals {
   arrivals: Arrival[];
+  fetchedAt: number;
+}
+
+interface LiveVehicles {
+  vehicles: LiveVehicle[];
   fetchedAt: number;
 }
 
@@ -60,12 +65,25 @@ export function getLiveArrivals(code: string, lang: Lang): Promise<LiveArrivals>
   }));
 }
 
+interface UpstreamVehicle {
+  lineCode: string;
+  routeCode: string;
+  routeName: string;
+  latitude: string;
+  longitude: string;
+  departureMins: number;
+}
+
 interface UpstreamLiveResponse {
-  vehicles: {
-    lineCode: string;
-    routeName: string;
-    departureMins: number;
-  }[];
+  vehicles: UpstreamVehicle[];
+}
+
+/** A vehicle's position as [latitude, longitude], or null when missing (citybus may send 0 or ''). */
+function parsePosition(v: Partial<UpstreamVehicle>): [number, number] | null {
+  const lat = Number(v.latitude);
+  const lng = Number(v.longitude);
+  if (!lat || !lng || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return [round(lat), round(lng)];
 }
 
 function parseArrivals(raw: unknown): Arrival[] {
@@ -77,9 +95,25 @@ function parseArrivals(raw: unknown): Arrival[] {
       line: String(v.lineCode),
       destination: String(v.routeName ?? ''),
       minutes: Math.max(0, Math.round(Number(v.departureMins))),
+      position: parsePosition(v),
     }))
     .filter((a) => Number.isFinite(a.minutes))
     .sort((a, b) => a.minutes - b.minutes);
+}
+
+/** Buses of a line that are on the road right now, with their positions. */
+export function getLineVehicles(line: string, lang: Lang): Promise<LiveVehicles> {
+  return cached(`line-live:${lang}:${line}`, LIVE_CACHE_MS, async () => {
+    const raw = await request(`lines/live/${encodeURIComponent(line)}`, lang);
+    if (!Array.isArray(raw)) throw unexpected(raw);
+    const vehicles = (raw as Partial<UpstreamVehicle>[]).flatMap((v): LiveVehicle[] => {
+      const position = parsePosition(v);
+      return position
+        ? [{ route: String(v.routeCode ?? ''), routeName: cleanName(v.routeName), position }]
+        : [];
+    });
+    return { vehicles, fetchedAt: Date.now() };
+  });
 }
 
 /** A line with each of its routes: the road it takes and its stops in order. */

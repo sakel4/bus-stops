@@ -30,6 +30,22 @@ export interface LineDetailsResponse {
   routes: LineRoute[];
 }
 
+/** A bus of the line that is currently on the road. */
+export interface LiveVehicle {
+  /** Code of the route the bus is running. */
+  route: string;
+  routeName: string;
+  /** [latitude, longitude] */
+  position: [number, number];
+}
+
+/** Body of GET /api/lines/{line}/live. */
+export interface LineLiveResponse {
+  vehicles: LiveVehicle[];
+  /** ISO time the data was fetched from citybus. */
+  updatedAt: string;
+}
+
 /** Every line code serving at least one stop, sorted ('01', '02', …). */
 export function getLineCodes(): string[] {
   const codes = new Set<string>();
@@ -56,4 +72,9 @@ export function getLineUrl(line: string, lang: Lang, fromStop?: string): string 
 /** URL of our own line endpoint (src/pages/api/lines/[line].ts). */
 export function getLineDetailsUrl(line: string, lang: Lang): string {
   return `/api/lines/${line}?lang=${lang}`;
+}
+
+/** URL of our own live vehicles endpoint (src/pages/api/lines/[line]/live.ts). */
+export function getLineLiveUrl(line: string, lang: Lang): string {
+  return `/api/lines/${line}/live?lang=${lang}`;
 }

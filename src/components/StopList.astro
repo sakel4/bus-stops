@@ -331,7 +331,25 @@ const locateLabels = {
     if ('geolocation' in navigator && window.isSecureContext) {
       locateButton.hidden = false;
       locateButton.addEventListener('click', locate);
+      // The same button on the home map (StopsMap.astro).
+      window.addEventListener('stops:locate', locate);
     }
+
+    // Highlight the stop under the mouse or keyboard focus on the map.
+    let highlighted: string | null = null;
+    const highlight = (code: string | null) => {
+      if (code === highlighted) return;
+      highlighted = code;
+      window.dispatchEvent(new CustomEvent('stops:highlight', { detail: { code } }));
+    };
+    const codeOf = (target: EventTarget | null) =>
+      (target as Element | null)?.closest<HTMLElement>('li[data-code]')?.dataset.code ?? null;
+    list.addEventListener('mouseover', (event) => highlight(codeOf(event.target)));
+    list.addEventListener('mouseleave', () => highlight(null));
+    list.addEventListener('focusin', (event) => highlight(codeOf(event.target)));
+    list.addEventListener('focusout', (event) => {
+      if (!list.contains(event.relatedTarget as Node | null)) highlight(null);
+    });
 
     input.addEventListener('input', () => {
       // Typing a search replaces the "near me" results.

@@ -10,12 +10,21 @@ interface Props {
 
 const { lang, stop } = Astro.props;
 const t = useTranslations(lang);
+
+// Templates the browser fills in; placeholders are kept as-is.
+const labels = {
+  touchHint: t('map.touchHint'),
+  bus: t('map.bus', { line: '{line}', time: '{time}' }),
+  now: t('arrivals.now'),
+  minutes: t('arrivals.minutes', { count: '{count}' }),
+};
 ---
 
 <div
   data-stop-map
   data-lat={stop.latitude}
   data-lng={stop.longitude}
+  data-labels={JSON.stringify(labels)}
   class="z-0 h-full w-full"
   role="region"
   aria-label={t('stop.map')}
@@ -24,14 +33,26 @@ const t = useTranslations(lang);
 
 <script>
   import L from 'leaflet';
-  import { createMap } from '../lib/map';
+  import type { Arrival } from '../lib/arrivals';
+  import { getLineColor } from '../lib/lines';
+  import { busMarker, createMap } from '../lib/map';
+
+  /** On the first update, zoom out to show the buses arriving within this many minutes. */
+  const FIT_MINUTES = 10;
 
   const container = document.querySelector<HTMLElement>('[data-stop-map]');
 
   if (container) {
+    const labels = JSON.parse(container.dataset.labels ?? '{}') as Record<
+      'touchHint' | 'bus' | 'now' | 'minutes',
+      string
+    >;
     const position: L.LatLngTuple = [Number(container.dataset.lat), Number(container.dataset.lng)];
 
-    const map = createMap(container).setView(position, 17);
+    const map = createMap(container, { embedded: { touchHint: labels.touchHint } }).setView(
+      position,
+      17,
+    );
 
     L.circleMarker(position, {
       radius: 8,
@@ -40,5 +61,37 @@ const t = useTranslations(lang);
       fillColor: '#3b82f6',
       fillOpacity: 0.85,
     }).addTo(map);
+
+    // Live buses, from the arrivals that StopArrivals.astro loads and refreshes.
+    const busLayer = L.layerGroup().addTo(map);
+    let fitted = false;
+
+    const formatMinutes = (minutes: number) =>
+      minutes < 1 ? labels.now : labels.minutes.replace('{count}', String(minutes));
+
+    window.addEventListener('stop:arrivals', (event) => {
+      const { arrivals } = (event as CustomEvent<{ arrivals: Arrival[] }>).detail;
+      busLayer.clearLayers();
+
+      for (const arrival of arrivals) {
+        if (!arrival.position) continue;
+        busMarker({
+          line: arrival.line,
+          color: getLineColor(arrival.line),
+          position: arrival.position,
+          label: labels.bus
+            .replace('{line}', arrival.line)
+            .replace('{time}', formatMinutes(arrival.minutes)),
+        }).addTo(busLayer);
+      }
+
+      // Only once: after that, leave the view to the user.
+      const soon = arrivals.filter((a) => a.position && a.minutes <= FIT_MINUTES);
+      if (!fitted && soon.length > 0) {
+        fitted = true;
+        const bounds = L.latLngBounds([position, ...soon.map((a) => a.position!)]);
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
+      }
+    });
   }
 </script>
