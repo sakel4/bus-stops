@@ -1,9 +1,9 @@
 ---
 import '../styles/global.css';
 import LanguagePicker from '../components/LanguagePicker.astro';
-import { languages, type Lang } from '../i18n/ui';
+import { defaultLang, languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
-import Analytics from '@vercel/analytics/astro'
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   /** Page name; shown as "{title} · {site title}". */
@@ -13,11 +13,13 @@ interface Props {
   description?: string;
   /** Path without locale prefix, used for the language switcher / hreflang. */
   path?: string;
+  /** The page shows a map: connect to the tile server early, as the first tiles are often the largest paint. */
+  map?: boolean;
 }
 
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
-const { title, fullTitle, description = t('site.description'), path = '' } = Astro.props;
+const { title, fullTitle, description = t('site.description'), path = '', map = false } = Astro.props;
 const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.title')}` : t('site.title'));
 
 // Link previews (Facebook, Instagram DMs, X/Twitter, Discord, chat apps). These need absolute URLs.
@@ -25,6 +27,8 @@ const ogLocales: Record<Lang, string> = { el: 'el_GR', en: 'en_US' };
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 // Bump `v` whenever og-image.jpg changes: Facebook, Discord and X cache previews by URL.
 const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
+// hreflang links must be absolute; x-default points search engines to the Greek (default) version.
+const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.site).href;
 ---
 
 <!doctype html>
@@ -38,6 +42,7 @@ const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1d4ed8" />
+    {map && <link rel="preconnect" href="https://tile.openstreetmap.org" />}
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={t('site.title')} />
@@ -60,9 +65,10 @@ const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
     <meta name="twitter:image:alt" content={t('og.imageAlt')} />
     {
       (Object.keys(languages) as Lang[]).map((code) => (
-        <link rel="alternate" hreflang={code} href={localizePath(code, path)} />
+        <link rel="alternate" hreflang={code} href={alternateUrl(code)} />
       ))
     }
+    <link rel="alternate" hreflang="x-default" href={alternateUrl(defaultLang)} />
     <title>{pageTitle}</title>
   </head>
   <body class="flex h-full flex-col bg-slate-50 text-slate-900 antialiased">
@@ -70,7 +76,7 @@ const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
     <header class="bg-blue-700 text-white shadow">
       <div class="flex items-center justify-between gap-4 px-4 py-3">
         <a href={localizePath(lang)} class="flex items-center gap-2 text-lg font-semibold">
-          <img src="/icon-192.png" alt="" width="28" height="28" class="size-7" />
+          <img src="/logo-56.webp" alt="" width="28" height="28" class="size-7" />
           {t('site.title')}
         </a>
         <div class="flex shrink-0 items-center gap-2">

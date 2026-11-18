@@ -31,7 +31,7 @@ const metaTitle =
 const metaDescription = t('stop.metaDescription', { name, code: stop.code, lines });
 ---
 
-<Layout fullTitle={metaTitle} description={metaDescription} path={getStopPath(stop)}>
+<Layout map fullTitle={metaTitle} description={metaDescription} path={getStopPath(stop)}>
   <div class="h-full overflow-y-auto">
     <article class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
       <BackLink href={localizePath(lang)}>{t('stop.back')}</BackLink>

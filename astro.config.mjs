@@ -20,6 +20,8 @@ export default defineConfig({
   site,
   // Pages are prerendered; only the live arrivals endpoint runs as a Vercel function.
   adapter: vercel(),
+  // The CSS is small (~14 KB); inlining it saves two render-blocking requests.
+  build: { inlineStylesheets: 'always' },
   i18n: {
     locales: ['el', 'en'],
     defaultLocale: 'el',
