@@ -3,12 +3,12 @@ layout: ../../layouts/ProseLayout.astro
 title: Privacy policy
 description: Privacy and personal data protection policy of the Heraklion Bus Stops app under the General Data Protection Regulation (GDPR).
 path: privacy
-updated: 'Effective date: 17 November 2026'
+updated: 'Effective date: 18 November 2026'
 ---
 
 This policy describes how the "Heraklion Bus Stops" application (the "App") processes personal data in accordance with Regulation (EU) 2016/679 (General Data Protection Regulation, "GDPR") and Greek Law 4624/2019.
 
-The App is an unofficial, non-commercial hobby project and is not affiliated with Astiko KTEL Irakleiou. It does not require an account, does not display advertising and does not use cookies or web analytics tools.
+The App is an unofficial, non-commercial hobby project and is not affiliated with Astiko KTEL Irakleiou. It does not require an account, does not display advertising and does not use cookies. It measures traffic with anonymous, aggregated statistics (section 2.4).
 
 ## 1. Data controller
 
@@ -40,9 +40,17 @@ The "Near me" feature uses your device's location only if you press the correspo
 
 To display arrival times, the App's server sends a request to the citybus live data service (rest.citybus.gr). The request contains only the stop code and the display language. No personal data, including your IP address, is transmitted to citybus.
 
+### 2.4 Visitor statistics (Vercel Web Analytics)
+
+The App uses Vercel Web Analytics to measure traffic. For each page view, it records the page visited, the page you came from (referrer), and your country, device type, operating system and browser.
+
+- **Purpose:** understanding how the App is used (for example, which pages are used most) and improving it.
+- **Legal basis:** the controller's legitimate interest in improving the App (Article 6(1)(f) GDPR).
+- **How it is processed:** the service does not use cookies and stores nothing on your device. Visitors are told apart using a cryptographic hash of the request, which is deleted automatically after 24 hours. Your IP address is not stored, and the controller only sees aggregated data that cannot identify individual visitors.
+
 ## 3. Recipients
 
-**Vercel Inc.** (440 N Barranca Ave #4133, Covina, CA 91723, USA) provides hosting services for the App and processes the technical data described in section 2.1 as a processor on behalf of the controller, in accordance with Article 28 GDPR and Vercel's [Data Processing Addendum](https://vercel.com/legal/dpa). See also [Vercel's privacy policy](https://vercel.com/legal/privacy-policy).
+**Vercel Inc.** (440 N Barranca Ave #4133, Covina, CA 91723, USA) provides hosting services for the App and processes the data described in sections 2.1 and 2.4 as a processor on behalf of the controller, in accordance with Article 28 GDPR and Vercel's [Data Processing Addendum](https://vercel.com/legal/dpa). See also [Vercel's privacy policy](https://vercel.com/legal/privacy-policy).
 
 **OpenStreetMap Foundation** (St John's Innovation Centre, Cowley Road, Cambridge, CB4 0WS, United Kingdom). Map tiles are loaded directly from OpenStreetMap's servers, so your browser transmits your IP address and technical information to them, as with any content loaded from a third-party website. Embedding the map is based on the legitimate interest in providing the App's core functionality (Article 6(1)(f) GDPR). The OpenStreetMap Foundation processes this data as an independent controller under its own [privacy policy](https://osmfoundation.org/wiki/Privacy_Policy).
 
@@ -55,7 +63,7 @@ Data is not sold, rented or disclosed to any other third party, unless required 
 
 ## 5. Cookies and local storage
 
-The App does not use cookies, local storage or similar technologies that store information on your device. For this reason, no cookie consent banner is shown.
+The App does not use cookies, local storage or similar technologies that store information on your device. This also applies to the visitor statistics described in section 2.4. For this reason, no cookie consent banner is shown.
 
 ## 6. Automated decision-making
 
