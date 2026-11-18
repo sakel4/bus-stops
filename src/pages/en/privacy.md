@@ -54,6 +54,8 @@ The App uses Vercel Web Analytics to measure traffic. For each page view, it rec
 
 **OpenStreetMap Foundation** (St John's Innovation Centre, Cowley Road, Cambridge, CB4 0WS, United Kingdom). Map tiles are loaded directly from OpenStreetMap's servers, so your browser transmits your IP address and technical information to them, as with any content loaded from a third-party website. Embedding the map is based on the legitimate interest in providing the App's core functionality (Article 6(1)(f) GDPR). The OpenStreetMap Foundation processes this data as an independent controller under its own [privacy policy](https://osmfoundation.org/wiki/Privacy_Policy).
 
+**Ko-fi** (Ko-fi Labs Ltd). The "Support" link takes you to the App's donation page on ko-fi.com, only if you choose to open it. The App does not send any data to Ko-fi. Any details you give there to make a donation are processed by Ko-fi as an independent controller under its own [privacy policy](https://more.ko-fi.com/privacy).
+
 Data is not sold, rented or disclosed to any other third party, unless required by law.
 
 ## 4. Transfers outside the EU
