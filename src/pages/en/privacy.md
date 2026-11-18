@@ -38,7 +38,7 @@ The "Near me" feature uses your device's location only if you press the correspo
 
 ### 2.3 Bus arrival times
 
-To display arrival times, the App's server sends a request to the citybus live data service (rest.citybus.gr). The request contains only the stop code and the display language. No personal data, including your IP address, is transmitted to citybus.
+To display arrival times, the App's server sends a request to the citybus live data service (rest.citybus.gr). The same applies to the bus positions shown on the map. The request contains only the stop or line code and the display language. No personal data, including your IP address, is transmitted to citybus.
 
 ### 2.4 Visitor statistics (Vercel Web Analytics)
 

@@ -8,6 +8,8 @@ export interface Arrival {
   destination: string;
   /** Minutes until the bus reaches the stop (0 = arriving now). */
   minutes: number;
+  /** Where the bus is now, as [latitude, longitude]; null when citybus doesn't know. */
+  position: [number, number] | null;
 }
 
 /** Body of GET /api/stops/{code}/live. */

@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import BackLink from './BackLink.astro';
 import RetryMessage from './RetryMessage.astro';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
-import { getLineDetailsUrl, getLinePath } from '../lib/line-routes';
+import { getLineDetailsUrl, getLineLiveUrl, getLinePath } from '../lib/line-routes';
 import { getLineColor } from '../lib/lines';
 import { getStopUrl } from '../lib/stops';
 
@@ -23,6 +23,7 @@ const labels = {
   backToStop: t('line.backToStop'),
   code: t('stop.code'),
   details: t('map.details'),
+  touchHint: t('map.touchHint'),
 };
 const STOP_CODE = '__code__';
 const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
@@ -38,6 +39,8 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
       class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6"
       data-line-page
       data-url={getLineDetailsUrl(line, lang)}
+      data-live-url={getLineLiveUrl(line, lang)}
+      data-line={line}
       data-color={color}
       data-stop-url={stopUrl}
       data-stop-code={STOP_CODE}
@@ -78,6 +81,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
 
         <section class="card overflow-hidden">
           <div class="h-80 bg-slate-100" data-line-map role="region" aria-label={t('line.map')}></div>
+          <p class="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">{t('map.liveNote')}</p>
         </section>
 
         <section class="card p-4">
@@ -130,14 +134,16 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
 
 <script>
   import L from 'leaflet';
-  import { createMap, stopPopupHtml } from '../lib/map';
-  import type { LineDetailsResponse, LineRoute } from '../lib/line-routes';
+  import { busMarker, createMap, stopPopupHtml } from '../lib/map';
+  import type { LineDetailsResponse, LineLiveResponse, LineRoute } from '../lib/line-routes';
+
+  const LIVE_REFRESH_MS = 30_000;
 
   const root = document.querySelector<HTMLElement>('[data-line-page]');
   if (root) {
     const color = root.dataset.color!;
     const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<
-      'stopCount' | 'thisStop' | 'backToStop' | 'code' | 'details',
+      'stopCount' | 'thisStop' | 'backToStop' | 'code' | 'details' | 'touchHint',
       string
     >;
     const stopUrl = (code: string) => root.dataset.stopUrl!.replace(root.dataset.stopCode!, code);
@@ -162,12 +168,19 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
     // The map is created on first use: its container must be visible to size itself.
     let map: L.Map | undefined;
     let routeLayer: L.FeatureGroup | undefined;
+    let busLayer: L.LayerGroup | undefined;
+    let currentRoute: LineRoute | undefined;
+    let vehicles: LineLiveResponse['vehicles'] = [];
 
     const drawMap = (route: LineRoute) => {
       if (!map) {
-        map = createMap(part('line-map'));
+        map = createMap(part('line-map'), { embedded: { touchHint: labels.touchHint } });
         routeLayer = L.featureGroup().addTo(map);
+        busLayer = L.layerGroup().addTo(map);
+        loadLive();
       }
+      currentRoute = route;
+      drawBuses();
       routeLayer!.clearLayers();
 
       L.polyline(route.path, { color, weight: 5, opacity: 0.8 }).addTo(routeLayer!);
@@ -216,6 +229,39 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
       row.querySelector('[data-code]')!.textContent = stop.code;
       return row;
     };
+
+    // Live buses of the line. Those on other routes than the one shown are faded.
+    const drawBuses = () => {
+      if (!busLayer) return;
+      busLayer.clearLayers();
+      for (const vehicle of vehicles) {
+        const onRoute = vehicle.route === currentRoute?.code;
+        busMarker(
+          { line: root.dataset.line!, color, position: vehicle.position, label: vehicle.routeName },
+          { faded: !onRoute },
+        ).addTo(busLayer);
+      }
+    };
+
+    let liveTimer: number | undefined;
+    const loadLive = async () => {
+      clearTimeout(liveTimer);
+      try {
+        const res = await fetch(root.dataset.liveUrl!);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        vehicles = ((await res.json()) as LineLiveResponse).vehicles;
+      } catch {
+        // Not worth an error message: the route and stops still work without buses.
+        vehicles = [];
+      }
+      drawBuses();
+      // Only keep polling while the tab is visible.
+      if (!document.hidden) liveTimer = window.setTimeout(loadLive, LIVE_REFRESH_MS);
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearTimeout(liveTimer);
+      else if (map) loadLive();
+    });
 
     const showRoute = (route: LineRoute) => {
       stopList.replaceChildren(...route.stops.map(renderStop));

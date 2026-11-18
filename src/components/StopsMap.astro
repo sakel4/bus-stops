@@ -18,6 +18,7 @@ const mapData = {
     lines: t('stop.lines'),
     details: t('map.details'),
     you: t('locate.you'),
+    locate: t('locate.label'),
   },
   stops: stops.map((s) => ({
     code: s.code,
@@ -37,7 +38,16 @@ const mapData = {
 
 <script>
   import L from 'leaflet';
-  import { createMap, stopPopupHtml } from '../lib/map';
+  import { canHover, createMap, stopPopupHtml } from '../lib/map';
+
+  const STOP_STYLE = { color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.85 };
+  const HIGHLIGHT_STYLE = { color: '#c2410c', fillColor: '#f97316', fillOpacity: 1 };
+
+  /** Small dots for the whole city, bigger ones (easier to tap) on the street level. */
+  const radiusFor = (zoom: number) => Math.min(8, Math.max(3, zoom - 9));
+
+  const LOCATE_ICON =
+    '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.544l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" clip-rule="evenodd"/></svg>';
 
   interface MapStop {
     code: string;
@@ -53,23 +63,21 @@ const mapData = {
 
   if (container && dataEl) {
     const { labels, stops } = JSON.parse(dataEl.textContent ?? '{}') as {
-      labels: { code: string; lines: string; details: string; you: string };
+      labels: { code: string; lines: string; details: string; you: string; locate: string };
       stops: MapStop[];
     };
 
     const map = createMap(container);
 
     const markers = new Map<string, L.CircleMarker>();
+    const hover = canHover();
     const layer = L.featureGroup().addTo(map);
 
     for (const stop of stops) {
-      const marker = L.circleMarker([stop.lat, stop.lng], {
-        radius: 6,
-        color: '#1d4ed8',
-        weight: 2,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.85,
-      }).bindPopup(
+      const marker = L.circleMarker([stop.lat, stop.lng], { ...STOP_STYLE, radius: 6, weight: 2 });
+      // Names on hover save opening popups one by one (mouse only; a tap opens the popup).
+      if (hover) marker.bindTooltip(stop.name, { direction: 'top', offset: [0, -6] });
+      marker.bindPopup(
         stopPopupHtml({
           name: stop.name,
           details: [`${labels.code}: ${stop.code}`, `${labels.lines}: ${stop.lines.join(', ')}`],
@@ -83,6 +91,48 @@ const mapData = {
 
     const allBounds = layer.getBounds();
     map.fitBounds(allBounds, { padding: [20, 20] });
+
+    // Stop highlighted from the list (hover or keyboard focus), drawn bigger and in orange.
+    let highlighted: string | null = null;
+
+    const applySizes = () => {
+      const radius = radiusFor(map.getZoom());
+      const weight = radius <= 4 ? 1.5 : 2;
+      for (const [code, marker] of markers) {
+        marker.setRadius(code === highlighted ? radius + 3 : radius);
+        marker.setStyle({ weight });
+      }
+    };
+    map.on('zoomend', applySizes);
+    applySizes();
+
+    window.addEventListener('stops:highlight', (event) => {
+      const code = (event as CustomEvent<{ code: string | null }>).detail.code;
+      if (code === highlighted) return;
+      if (highlighted) markers.get(highlighted)?.setStyle(STOP_STYLE);
+      highlighted = code;
+      const marker = code ? markers.get(code) : undefined;
+      if (marker) marker.setStyle(HIGHLIGHT_STYLE).bringToFront();
+      applySizes();
+    });
+
+    // "Near me" on the map itself: on phones the map comes first and the list's button is
+    // further down. The stop list does the work (it listens for 'stops:locate').
+    if ('geolocation' in navigator && window.isSecureContext) {
+      const LocateControl = L.Control.extend({
+        onAdd() {
+          const bar = L.DomUtil.create('div', 'leaflet-bar md:hidden');
+          const button = L.DomUtil.create('button', 'map-locate', bar);
+          button.type = 'button';
+          button.title = button.ariaLabel = labels.locate;
+          button.innerHTML = LOCATE_ICON;
+          L.DomEvent.disableClickPropagation(bar);
+          L.DomEvent.on(button, 'click', () => window.dispatchEvent(new CustomEvent('stops:locate')));
+          return bar;
+        },
+      });
+      new LocateControl({ position: 'topright' }).addTo(map);
+    }
 
     // Keep the map in sync with the search box in the stop list.
     window.addEventListener('stops:filter', (event) => {

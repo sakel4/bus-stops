@@ -3,16 +3,74 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-/** A Leaflet map with OpenStreetMap tiles that follows its container's size. */
-export function createMap(container: HTMLElement): L.Map {
-  const map = L.map(container, { preferCanvas: true });
+/** Touch screens, where fingers need bigger targets and one-finger drags should scroll the page. */
+export const isTouch = () => window.matchMedia('(pointer: coarse)').matches;
+
+/** Devices with a mouse, where hover tooltips make sense. */
+export const canHover = () => window.matchMedia('(hover: hover)').matches;
+
+interface MapOptions {
+  /**
+   * The map sits inside a scrolling page. One finger (touch) and the mouse wheel then scroll
+   * the page instead of moving the map; two fingers, or a click first, move the map.
+   */
+  embedded?: { touchHint: string };
+}
+
+/** A Leaflet map with (muted) OpenStreetMap tiles that follows its container's size. */
+export function createMap(container: HTMLElement, { embedded }: MapOptions = {}): L.Map {
+  const map = L.map(container, {
+    // Canvas markers, with a wider hit area for fingers.
+    renderer: L.canvas({ tolerance: isTouch() ? 8 : 2 }),
+    scrollWheelZoom: !embedded,
+  });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
+    // Toned down in global.css so stops, routes and buses stand out.
+    className: 'map-tiles',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
   // The container may change size (e.g. responsive layout).
   new ResizeObserver(() => map.invalidateSize()).observe(container);
+
+  if (embedded) {
+    // Mouse wheel: only zoom once the user has clicked into the map.
+    map.on('click focus', () => map.scrollWheelZoom.enable());
+    map.on('mouseout blur', () => map.scrollWheelZoom.disable());
+
+    if (isTouch()) useTwoFingerDrag(map, container, embedded.touchHint);
+  }
   return map;
+}
+
+/** One finger scrolls the page (with a hint), two fingers move and pinch-zoom the map. */
+function useTwoFingerDrag(map: L.Map, container: HTMLElement, hintText: string) {
+  map.dragging.disable();
+  const hint = L.DomUtil.create('div', 'map-hint', container);
+  hint.textContent = hintText;
+  hint.setAttribute('aria-hidden', 'true');
+  let hideTimer: number | undefined;
+
+  const onTouch = (event: TouchEvent) => {
+    if (event.touches.length >= 2) {
+      map.dragging.enable();
+      hint.classList.remove('is-visible');
+    } else {
+      map.dragging.disable();
+    }
+  };
+  container.addEventListener('touchstart', onTouch, { passive: true });
+  container.addEventListener('touchend', onTouch, { passive: true });
+  container.addEventListener(
+    'touchmove',
+    (event) => {
+      if (event.touches.length !== 1) return;
+      hint.classList.add('is-visible');
+      clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => hint.classList.remove('is-visible'), 1200);
+    },
+    { passive: true },
+  );
 }
 
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -31,4 +89,33 @@ export function stopPopupHtml(stop: {
     `<a href="${escape(stop.url)}" class="mt-2 inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white! no-underline! transition-colors hover:bg-blue-700">` +
     `${escape(stop.linkLabel)} <span aria-hidden="true">›</span></a>`
   );
+}
+
+// Material Symbols "directions_bus" (Apache 2.0): reads well at small sizes.
+const BUS_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z"/></svg>';
+
+/**
+ * A live bus: a callout in the line's color with a bus icon and the line number, whose tail
+ * points at the bus's position.
+ */
+export function busMarker(
+  bus: { line: string; color: string; position: [number, number]; label: string },
+  { faded = false } = {},
+): L.Marker {
+  return L.marker(bus.position, {
+    icon: L.divIcon({
+      // No class: Leaflet's default one draws a white box behind the icon.
+      className: '',
+      // A zero-size anchor at the bus's position; the callout is drawn above it (global.css).
+      html:
+        `<span class="bus-marker${faded ? ' is-faded' : ''}" style="--line-color:${escape(bus.color)}">` +
+        `<span class="bus-marker-icon">${BUS_ICON}</span>${escape(bus.line)}</span>`,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0],
+    }),
+    keyboard: false,
+    // Above stop markers and the route line.
+    zIndexOffset: faded ? 500 : 1000,
+  }).bindTooltip(bus.label, { direction: 'top', offset: [0, -32] });
 }

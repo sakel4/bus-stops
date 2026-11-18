@@ -18,3 +18,77 @@
     @apply transition hover:brightness-125 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-1 focus-visible:outline-none;
   }
 }
+
+/* --- Maps (src/lib/map.ts) --------------------------------------------------- */
+
+/* Calmer OpenStreetMap tiles, so stops, routes and buses stand out. */
+.map-tiles {
+  filter: saturate(0.45) contrast(0.92) brightness(1.04);
+}
+
+/* Live bus: a callout in the line's color (--line-color) whose tail points at the bus. */
+.bus-marker {
+  @apply absolute flex h-6 items-center gap-1 rounded-full pr-2 pl-[3px] text-[13px] font-bold whitespace-nowrap text-white tabular-nums;
+  background-color: var(--line-color);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 2px 6px rgb(0 0 0 / 0.35);
+  /* Centered above the anchor point, leaving room for the tail. */
+  transform: translate(-50%, calc(-100% - 6px));
+
+  /* The tail: a rotated square with a white edge to match the outline. */
+  &::after {
+    @apply absolute -bottom-[5px] left-1/2 size-[9px] rounded-br-[2px];
+    content: '';
+    background-color: var(--line-color);
+    box-shadow: 2px 2px 0 0 #fff;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  /* A bus on another route of the line: outlined instead of filled, still fully opaque so the
+     route line doesn't show through. */
+  &.is-faded {
+    background-color: #fff;
+    color: var(--line-color);
+    box-shadow:
+      0 0 0 2px var(--line-color),
+      0 1px 4px rgb(0 0 0 / 0.25);
+
+    &::after {
+      background-color: #fff;
+      box-shadow: 2px 2px 0 0 var(--line-color);
+    }
+  }
+}
+
+.bus-marker-icon {
+  @apply grid size-[18px] place-items-center rounded-full bg-white;
+  color: var(--line-color);
+
+  & svg {
+    @apply size-[13px];
+  }
+
+  .is-faded & {
+    background-color: var(--line-color);
+    color: #fff;
+  }
+}
+
+/* "Use two fingers to move the map", shown on a one-finger drag over an embedded map. */
+.map-hint {
+  @apply pointer-events-none absolute inset-0 z-[1000] flex items-center justify-center bg-slate-900/45 p-6 text-center text-sm font-semibold text-white opacity-0 transition-opacity duration-300;
+
+  &.is-visible {
+    @apply opacity-100;
+  }
+}
+
+/* "Near me" button drawn on the home map (phones only; the stop list has its own). */
+.map-locate {
+  @apply flex size-[34px] items-center justify-center bg-white text-blue-600 hover:bg-slate-100;
+
+  & svg {
+    @apply size-5;
+  }
+}
