@@ -1,6 +1,8 @@
-![Heraklion Bus Stops: live bus arrivals](public/og-image.jpg)
+![HopOn, Heraklion Bus Stops: live bus arrivals](public/og-image.jpg)
 
-# Heraklion Bus Stops (Στάσεις Λεωφορείων Ηρακλείου)
+# HopOn
+
+**Heraklion Bus Stops · Στάσεις Λεωφορείων Ηρακλείου**
 
 A map and a list of every city bus stop in Heraklion, Crete, with live arrival times for each stop and the route of every bus line. Available in Greek and English.
 
@@ -14,6 +16,7 @@ It's a hobby project, built to solve an everyday problem: quickly checking on yo
 - **Stop pages.** Every stop has its own page (`/stops/{code}/`, `/en/stops/{code}/`) with the lines serving it, a map and live arrivals.
 - **Line pages.** Tap a line on a stop page to see its route on the map and all of its stops in order, with your stop highlighted (`/lines/{line}/`, `/en/lines/{line}/`). Lines with several routes have a route picker.
 - **Live arrivals.** See which line is coming, where it's heading and in how many minutes. Arrival times refresh automatically every 30 seconds while the page is open.
+- **Favourites.** Tap the star next to a stop in the list, or on its page, to save it. The home page opens on your favourites, and the star in the header takes you back to them from any page. They are saved only in your browser.
 - **Near me.** Press the button and allow location access to see the 5 nearest stops with their straight-line distance. The nearest stop may be across the street, serving the opposite direction, which is why more than one is shown.
 - **Greek and English** throughout, including stop names and arrival destinations.
 
@@ -25,7 +28,7 @@ Arrival times are estimates. Traffic delays or timetable changes may not show up
 
 ## Privacy
 
-No cookies and no ads. Traffic is measured with cookieless, aggregated Vercel Web Analytics. Your location is only used when you press "Near me", is processed only in your browser and is never sent or stored. Requests to citybus contain only the stop or line code and language. See the full privacy policy at `/privacy/` (Greek) or `/en/privacy/` (English).
+No cookies and no ads. Traffic is measured with cookieless, aggregated Vercel Web Analytics. Your location is only used when you press "Near me", is processed only in your browser and is never sent or stored. Favourite stops are kept in your browser's local storage and never leave your device. Requests to citybus contain only the stop or line code and language. See the full privacy policy at `/privacy/` (Greek) or `/en/privacy/` (English).
 
 ## Development
 

@@ -4,6 +4,7 @@ import LanguagePicker from '../components/LanguagePicker.astro';
 import { defaultLang, languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import Analytics from '@vercel/analytics/astro';
+import { STAR_ICON_PATH } from '../lib/favorites';
 
 interface Props {
   /** Page name; shown as "{title} · {site title}". */
@@ -20,13 +21,15 @@ interface Props {
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
 const { title, fullTitle, description = t('site.description'), path = '', map = false } = Astro.props;
-const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.title')}` : t('site.title'));
+// The home page title also says what the site is, for search results and link previews.
+const homeTitle = `${t('site.name')} – ${t('site.title')}`;
+const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.name')}` : homeTitle);
 
 // Link previews (Facebook, Instagram DMs, X/Twitter, Discord, chat apps). These need absolute URLs.
 const ogLocales: Record<Lang, string> = { el: 'el_GR', en: 'en_US' };
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 // Bump `v` whenever og-image.jpg changes: Facebook, Discord and X cache previews by URL.
-const imageUrl = new URL('/og-image.jpg?v=2', Astro.site).href;
+const imageUrl = new URL('/og-image.jpg?v=3', Astro.site).href;
 // hreflang links must be absolute; x-default points search engines to the Greek (default) version.
 const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.site).href;
 ---
@@ -45,8 +48,8 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
     {map && <link rel="preconnect" href="https://tile.openstreetmap.org" />}
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={t('site.title')} />
-    <meta property="og:title" content={fullTitle ?? title ?? t('site.title')} />
+    <meta property="og:site_name" content={t('site.name')} />
+    <meta property="og:title" content={fullTitle ?? title ?? homeTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={pageUrl} />
     <meta property="og:locale" content={ogLocales[lang]} />
@@ -77,13 +80,24 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
       <div class="flex items-center justify-between gap-4 px-4 py-3">
         <a href={localizePath(lang)} class="flex items-center gap-2 text-lg font-semibold">
           <img src="/logo-56.webp" alt="" width="28" height="28" class="size-7" />
-          {t('site.title')}
+          {t('site.name')}
         </a>
         <div class="flex shrink-0 items-center gap-2">
           <!-- Icon only on phones, where the site title already takes most of the row. -->
+          <!-- Opens the home page with the Favourites list selected (StopList.astro). -->
+          <a
+            href={`${localizePath(lang)}#favorites`}
+            class="nav-link"
+            aria-label={t('nav.favorites')}
+          >
+            <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d={STAR_ICON_PATH}></path>
+            </svg>
+            <span class="hidden sm:inline" aria-hidden="true">{t('nav.favorites')}</span>
+          </a>
           <a
             href={localizePath(lang, 'schedules')}
-            class="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-blue-50 ring-1 ring-white/25 transition-colors ring-inset hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none aria-[current=page]:bg-white aria-[current=page]:text-blue-800"
+            class="nav-link"
             aria-current={path === 'schedules' ? 'page' : undefined}
             aria-label={t('nav.schedules')}
           >

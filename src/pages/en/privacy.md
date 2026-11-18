@@ -1,12 +1,12 @@
 ---
 layout: ../../layouts/ProseLayout.astro
 title: Privacy policy
-description: Privacy and personal data protection policy of the Heraklion Bus Stops app under the General Data Protection Regulation (GDPR).
+description: Privacy and personal data protection policy of the HopOn app under the General Data Protection Regulation (GDPR).
 path: privacy
 updated: 'Effective date: 18 November 2026'
 ---
 
-This policy describes how the "Heraklion Bus Stops" application (the "App") processes personal data in accordance with Regulation (EU) 2016/679 (General Data Protection Regulation, "GDPR") and Greek Law 4624/2019.
+This policy describes how the "HopOn – Heraklion Bus Stops" application (the "App") processes personal data in accordance with Regulation (EU) 2016/679 (General Data Protection Regulation, "GDPR") and Greek Law 4624/2019.
 
 The App is an unofficial, non-commercial hobby project and is not affiliated with Astiko KTEL Irakleiou. It does not require an account, does not display advertising and does not use cookies. It measures traffic with anonymous, aggregated statistics (section 2.4).
 
@@ -63,7 +63,9 @@ Data is not sold, rented or disclosed to any other third party, unless required 
 
 ## 5. Cookies and local storage
 
-The App does not use cookies, local storage or similar technologies that store information on your device. This also applies to the visitor statistics described in section 2.4. For this reason, no cookie consent banner is shown.
+The App does not use cookies. It uses your browser's local storage only to remember your favourite stops, if you choose to add any. Only the stop codes are stored; they stay on your device and are never sent to the App's server or to any third party. You can delete them at any time by removing the stops from your favourites or by clearing this site's data in your browser settings.
+
+This storage is strictly necessary to provide a feature you explicitly request (Article 5(3) of Directive 2002/58/EC, implemented in Greece by Article 4(5) of Law 3471/2006), so it does not require consent. The visitor statistics described in section 2.4 store nothing on your device. For these reasons, no cookie consent banner is shown.
 
 ## 6. Automated decision-making
 

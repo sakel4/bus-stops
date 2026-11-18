@@ -11,18 +11,31 @@ const stops = getStops(lang);
 ---
 
 <Layout map>
-  <h1 class="sr-only">{t('home.heading')}</h1>
-  <!-- Phones: svh, not vh. In iOS Safari vh is the height with the toolbars hidden, so a vh map
-       is taller than intended when the page opens. home-map shrinks while "near me" is active
-       (global.css) to leave room for the results. -->
-  <div class="home-layout flex h-full flex-col md:flex-row">
-    <div class="home-map h-[32svh] shrink-0 md:order-2 md:h-full md:flex-1">
-      <StopsMap lang={lang} stops={stops} />
+  <div class="flex h-full flex-col">
+    <!-- The header shows the short app name; this says what the site is. -->
+    <section class="border-b border-blue-100 bg-blue-50 px-4 py-1.5">
+      <h1 class="flex items-center gap-1.5 text-sm font-medium text-blue-900">
+        <svg class="size-4 shrink-0 text-blue-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.544l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <span class="truncate">{t('site.title')}</span>
+      </h1>
+    </section>
+    <!-- Phones: svh, not vh. In iOS Safari vh is the height with the toolbars hidden, so a vh map
+         is taller than intended when the page opens. home-map shrinks while "near me" is active
+         (global.css) to leave room for the results. -->
+    <div class="home-layout flex min-h-0 flex-1 flex-col md:flex-row">
+      <div class="home-map h-[32svh] shrink-0 md:order-2 md:h-full md:flex-1">
+        <StopsMap lang={lang} stops={stops} />
+      </div>
+      <aside
+        class="min-h-0 flex-1 border-slate-200 md:order-1 md:w-96 md:flex-none md:border-r"
+      >
+        <StopList lang={lang} stops={stops} />
+      </aside>
     </div>
-    <aside
-      class="min-h-0 flex-1 border-slate-200 md:order-1 md:w-96 md:flex-none md:border-r"
-    >
-      <StopList lang={lang} stops={stops} />
-    </aside>
   </div>
 </Layout>
