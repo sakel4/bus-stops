@@ -1,4 +1,4 @@
-# Heraklion Bus Stops (Στάσεις Λεωφορείων Ηρακλείου)
+# HopOn – Heraklion Bus Stops (Στάσεις Λεωφορείων Ηρακλείου)
 
 > Unofficial, non-commercial hobby website with a map and list of every city bus stop in Heraklion, Crete, Greece, live bus arrival times for each stop, and the route and stops of every bus line. Available in Greek (default) and English. It is not affiliated with Astiko KTEL Irakleiou (Αστικό ΚΤΕΛ Ηρακλείου), the city bus operator; for official timetables, tickets and announcements, refer to https://astiko-irakleiou.gr/.
 
