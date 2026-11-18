@@ -98,3 +98,9 @@ Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Set `CITYBUS_TO
 This is a free, ad-free hobby project. If it saves you some waiting at the bus stop and you'd like to say thanks, you can buy me a coffee on Ko-fi. It helps cover hosting and keeps the project going.
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sakel4)
+
+## License
+
+Copyright (C) 2026 Sakellaris Sfakiotakis
+
+Licensed under the [GNU Affero General Public License v3.0](LICENSE).
