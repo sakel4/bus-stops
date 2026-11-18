@@ -2,6 +2,7 @@
 import { defineConfig, envField } from 'astro/config';
 import vercel from '@astrojs/vercel';
 import tailwindcss from '@tailwindcss/vite';
+import sitemap from '@astrojs/sitemap';
 
 // Node's types aren't installed, so read the environment through an untyped globalThis.
 const env = /** @type {Record<string, string | undefined>} */ (
@@ -20,6 +21,15 @@ export default defineConfig({
   site,
   // Pages are prerendered; only the live arrivals endpoint runs as a Vercel function.
   adapter: vercel(),
+  integrations: [
+    // sitemap-index.xml, linked from robots.txt (src/pages/robots.txt.ts). Each URL also lists its
+    // other-language version, matching the hreflang links in Layout.astro.
+    sitemap({
+      i18n: { defaultLocale: 'el', locales: { el: 'el', en: 'en' } },
+      // The offline page is noindex; it exists only for the service worker.
+      filter: (page) => !/\/offline\/$/.test(page),
+    }),
+  ],
   // The CSS is small (~14 KB); inlining it saves two render-blocking requests.
   build: { inlineStylesheets: 'always' },
   i18n: {

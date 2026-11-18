@@ -5,6 +5,7 @@ import RetryMessage from './RetryMessage.astro';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import { getLineDetailsUrl, getLineLiveUrl, getLinePath } from '../lib/line-routes';
 import { getLineColor } from '../lib/lines';
+import { breadcrumbJsonLd } from '../lib/seo';
 import { getStopUrl } from '../lib/stops';
 
 interface Props {
@@ -27,6 +28,9 @@ const labels = {
 };
 const STOP_CODE = '__code__';
 const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
+const jsonLd = breadcrumbJsonLd(lang, Astro.site, [
+  [t('line.title', { line }), localizePath(lang, getLinePath(line))],
+]);
 ---
 
 <Layout
@@ -34,6 +38,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
   fullTitle={t('line.metaTitle', { line })}
   description={t('line.metaDescription', { line })}
   path={getLinePath(line)}
+  jsonLd={jsonLd}
 >
   <div class="h-full overflow-y-auto">
     <article

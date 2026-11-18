@@ -15,6 +15,7 @@ It's a hobby project, built to solve an everyday problem: quickly checking on yo
 - **Map and list of all stops.** Search for a stop by name (Greek or Latin spelling) or by its code.
 - **Stop pages.** Every stop has its own page (`/stops/{code}/`, `/en/stops/{code}/`) with the lines serving it, a map and live arrivals.
 - **Line pages.** Tap a line on a stop page to see its route on the map and all of its stops in order, with your stop highlighted (`/lines/{line}/`, `/en/lines/{line}/`). Lines with several routes have a route picker.
+- **Destination pages.** The lines and stops for popular places such as the airport, Knossos, the port and PAGNI hospital (`/destinations/{slug}/`, `/en/destinations/{slug}/`). The places are listed in `src/lib/destinations.ts`; their lines come from the stop data.
 - **Live arrivals.** See which line is coming, where it's heading and in how many minutes. Arrival times refresh automatically every 30 seconds while the page is open.
 - **Favourites.** Tap the star next to a stop in the list, or on its page, to save it. The home page opens on your favourites, and the star in the header takes you back to them from any page. They are saved only in your browser.
 - **Near me.** Press the button and allow location access to see the 5 nearest stops with their straight-line distance. The nearest stop may be across the street, serving the opposite direction, which is why more than one is shown.
@@ -52,14 +53,15 @@ npm run dev            # http://localhost:4321
 | Variable        | Required | Purpose                                                                 |
 | --------------- | -------- | ----------------------------------------------------------------------- |
 | `CITYBUS_TOKEN` | Yes      | Bearer token for rest.citybus.gr. Server-only, never sent to the browser. Without it, stop pages show "Arrivals are unavailable". |
-| `SITE_URL`      | No       | Public origin used for absolute URLs (link previews). On Vercel the production domain is used automatically. |
+| `SITE_URL`      | No       | Public origin used for absolute URLs (link previews, canonical links, sitemap, robots.txt). On Vercel the production domain is used automatically. |
 
 ### How it fits together
 
-- All pages (home, 1,070 stop pages, 48 line pages, FAQ, privacy) are prerendered as static HTML.
+- All pages (home, 1,070 stop pages, 48 line pages, destination pages, timetables, FAQ, privacy) are prerendered as static HTML.
 - The only server code is two endpoints that proxy `rest.citybus.gr` with the token (`src/lib/citybus.ts`). The citybus API only allows browser requests from its own site, so its data has to go through them.
   - `src/pages/api/stops/[code]/live.ts` caches each stop for 20 seconds and returns a small JSON list of arrivals.
   - `src/pages/api/lines/[line].ts` fetches a line and the points of its routes, orders each route's stops along its path, and returns compact JSON. It's cached for an hour.
+- SEO: `@astrojs/sitemap` writes `sitemap-index.xml` (with each page's other-language version), `src/pages/robots.txt.ts` links to it, `Layout.astro` adds canonical and hreflang links, and `src/lib/seo.ts` builds the schema.org JSON-LD (website, bus stops, breadcrumbs, FAQ).
 - Text pages (`faq.md`, `privacy.md`) are Markdown under `src/pages/` and `src/pages/en/`; UI strings live in `src/i18n/ui.ts`.
 
 ### Service worker (PWA)

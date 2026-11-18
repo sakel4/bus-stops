@@ -19,6 +19,8 @@ interface Props {
   map?: boolean;
   /** Keep the page out of search results (e.g. the offline page). */
   noindex?: boolean;
+  /** Structured data (schema.org) for search engines, rendered as JSON-LD. See src/lib/seo.ts. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const lang = getLang(Astro.currentLocale);
@@ -30,6 +32,7 @@ const {
   path = '',
   map = false,
   noindex = false,
+  jsonLd,
 } = Astro.props;
 // The home page title also says what the site is, for search results and link previews.
 const homeTitle = `${t('site.name')} – ${t('site.title')}`;
@@ -37,11 +40,13 @@ const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.name')}` : homeTi
 
 // Link previews (Facebook, Instagram DMs, X/Twitter, Discord, chat apps). These need absolute URLs.
 const ogLocales: Record<Lang, string> = { el: 'el_GR', en: 'en_US' };
-const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 // Bump `v` whenever og-image.jpg changes: Facebook, Discord and X cache previews by URL.
 const imageUrl = new URL('/og-image.jpg?v=3', Astro.site).href;
 // hreflang links must be absolute; x-default points search engines to the Greek (default) version.
 const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.site).href;
+// Built from `path` like the hreflang links, so it always has the trailing slash and no query string:
+// /stops/0122, /stops/0122/ and /lines/06/?stop=0122 all point search engines to one URL.
+const pageUrl = alternateUrl(lang);
 ---
 
 <!doctype html>
@@ -90,6 +95,13 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
       ))
     }
     <link rel="alternate" hreflang="x-default" href={alternateUrl(defaultLang)} />
+    {!noindex && <link rel="canonical" href={pageUrl} />}
+    {
+      jsonLd && (
+        // Escaping "<" keeps a "</script>" inside the data from ending the tag.
+        <script type="application/ld+json" set:html={JSON.stringify(jsonLd).replaceAll('<', '\\u003c')} />
+      )
+    }
     <title>{pageTitle}</title>
   </head>
   <body
@@ -147,6 +159,9 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
         </p>
         <nav class="flex gap-4">
           <SupportDialog lang={lang} />
+          <a href={localizePath(lang, 'destinations')} class="hover:text-slate-900 hover:underline">
+            {t('footer.destinations')}
+          </a>
           <a href={localizePath(lang, 'faq')} class="hover:text-slate-900 hover:underline">
             {t('footer.faq')}
           </a>

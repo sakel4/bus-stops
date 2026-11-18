@@ -40,7 +40,28 @@ const labels = {
 
   const container = document.querySelector<HTMLElement>('[data-stop-map]');
 
+  /** The latest arrivals, kept until the map exists (it is created only when scrolled near). */
+  let latest: StopArrivalsDetail | undefined;
+  let onArrivals: ((detail: StopArrivalsDetail) => void) | undefined;
+  window.addEventListener('stop:arrivals', (event) => {
+    latest = (event as CustomEvent<StopArrivalsDetail>).detail;
+    onArrivals?.(latest);
+  });
+
+  // The map sits below the arrivals, often off screen on phones. Creating it only when it comes
+  // near the viewport keeps Leaflet's setup and the tile downloads out of the first paint.
   if (container) {
+    new IntersectionObserver(
+      (entries, observer) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        initMap(container);
+      },
+      { rootMargin: '200px' },
+    ).observe(container);
+  }
+
+  function initMap(container: HTMLElement) {
     const labels = JSON.parse(container.dataset.labels ?? '{}') as Record<
       'touchHint' | 'bus',
       string
@@ -58,8 +79,7 @@ const labels = {
     const busLayer = L.layerGroup().addTo(map);
     let fitted = false;
 
-    window.addEventListener('stop:arrivals', (event) => {
-      const { arrivals } = (event as CustomEvent<StopArrivalsDetail>).detail;
+    onArrivals = ({ arrivals }) => {
       busLayer.clearLayers();
 
       for (const arrival of arrivals) {
@@ -79,6 +99,7 @@ const labels = {
         const bounds = L.latLngBounds([position, ...soon.map((a) => a.position!)]);
         map.fitBounds(bounds, { padding: [30, 30], maxZoom: 17 });
       }
-    });
+    };
+    if (latest) onArrivals(latest);
   }
 </script>

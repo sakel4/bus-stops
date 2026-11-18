@@ -1,0 +1,46 @@
+---
+// One stop on a destination page: its name (linking to its page with live arrivals), code and lines.
+import type { Lang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+import { getLineUrl } from '../lib/line-routes';
+import { getLineColor } from '../lib/lines';
+import { getStopName, getStopUrl, type Stop } from '../lib/stops';
+
+interface Props {
+  lang: Lang;
+  stop: Stop;
+  /** Shown for nearby stops, e.g. "120 m". */
+  distance?: string;
+}
+
+const { lang, stop, distance } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+  <div class="flex items-baseline justify-between gap-3">
+    <a href={getStopUrl(stop, lang)} class="min-w-0 font-medium break-words text-blue-700 hover:underline">
+      {getStopName(stop, lang)}
+    </a>
+    <span class="shrink-0 font-mono text-xs text-slate-500">
+      {distance && <>{distance} · </>}
+      {stop.code}
+    </span>
+  </div>
+  <ul class="flex flex-wrap gap-1.5" aria-label={t('stop.lines')}>
+    {
+      stop.lineCodes.map((line) => (
+        <li>
+          <a
+            href={getLineUrl(line, lang, stop.code)}
+            class="line-chip block px-2 py-0.5 text-xs"
+            style={{ backgroundColor: getLineColor(line) }}
+            aria-label={t('stop.lineLink', { line })}
+          >
+            {line}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</li>

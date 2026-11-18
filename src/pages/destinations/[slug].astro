@@ -1,0 +1,16 @@
+---
+import DestinationPage from '../../components/DestinationPage.astro';
+import { DESTINATIONS, type Destination } from '../../lib/destinations';
+
+export function getStaticPaths() {
+  return DESTINATIONS.map((destination) => ({ params: { slug: destination.slug }, props: { destination } }));
+}
+
+interface Props {
+  destination: Destination;
+}
+
+const { destination } = Astro.props;
+---
+
+<DestinationPage destination={destination} />

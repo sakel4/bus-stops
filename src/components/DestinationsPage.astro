@@ -1,0 +1,68 @@
+---
+// Index of the destination pages (src/lib/destinations.ts), linked from the footer.
+import Layout from '../layouts/Layout.astro';
+import BackLink from './BackLink.astro';
+import { getLang, localizePath, useTranslations } from '../i18n/utils';
+import {
+  DESTINATIONS,
+  getDestinationDetails,
+  getDestinationPath,
+  getDestinationUrl,
+} from '../lib/destinations';
+import { getLineColor } from '../lib/lines';
+import { breadcrumbJsonLd } from '../lib/seo';
+
+const lang = getLang(Astro.currentLocale);
+const t = useTranslations(lang);
+const destinations = DESTINATIONS.map((destination) => ({
+  destination,
+  lineCodes: getDestinationDetails(destination, lang).lineCodes,
+}));
+---
+
+<Layout
+  fullTitle={t('destinations.metaTitle')}
+  description={t('destinations.metaDescription')}
+  path={getDestinationPath()}
+  jsonLd={breadcrumbJsonLd(lang, Astro.site, [
+    [t('destinations.title'), localizePath(lang, getDestinationPath())],
+  ])}
+>
+  <div class="h-full overflow-y-auto">
+    <article class="page-content">
+      <BackLink href={localizePath(lang)}>{t('stop.back')}</BackLink>
+
+      <header>
+        <h1 class="text-2xl font-semibold">{t('destinations.heading')}</h1>
+        <p class="mt-1 text-sm text-slate-500">{t('destinations.intro')}</p>
+      </header>
+
+      <ul class="card divide-y divide-slate-100">
+        {
+          destinations.map(({ destination, lineCodes }) => (
+            <li>
+              <a
+                href={getDestinationUrl(destination.slug, lang)}
+                class="flex flex-col gap-1.5 px-4 py-3 hover:bg-slate-50"
+              >
+                <span class="font-medium text-blue-700">
+                  {t('destination.title', { to: destination.to[lang] })}
+                </span>
+                <span class="flex flex-wrap gap-1.5" aria-label={t('destination.lines')}>
+                  {lineCodes.map((line) => (
+                    <span
+                      class="line-chip px-2 py-0.5 text-xs"
+                      style={{ backgroundColor: getLineColor(line) }}
+                    >
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+  </div>
+</Layout>
