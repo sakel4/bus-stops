@@ -25,7 +25,7 @@ const labels = {
 >
   <div class="h-full overflow-y-auto">
     <article
-      class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6"
+      class="page-content"
       data-schedules-page
       data-url="/api/schedules"
       data-days={JSON.stringify(dayLabels)}
@@ -168,14 +168,14 @@ const labels = {
 </Layout>
 
 <script>
+  import { fetchJson, partOf } from '../lib/dom';
   import { ALL_LINES, getPdfUrl, getToday, type Day, type SchedulesResponse } from '../lib/schedules';
 
   const root = document.querySelector<HTMLElement>('[data-schedules-page]');
   if (root) {
     const dayLabels = JSON.parse(root.dataset.days!) as Record<Day, string>;
     const labels = JSON.parse(root.dataset.labels!) as Record<'noToday' | 'pdfTitle', string>;
-    const part = <T extends HTMLElement = HTMLElement>(name: string) =>
-      root.querySelector<T>(`[data-${name}]`)!;
+    const part = partOf(root);
     const today = getToday();
 
     // Android Chrome and most phones can't render a PDF inside an iframe: there we only show the link.
@@ -256,9 +256,7 @@ const labels = {
       part('skeleton').hidden = false;
       root.setAttribute('aria-busy', 'true');
       try {
-        const res = await fetch(root.dataset.url!);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        render((await res.json()) as SchedulesResponse);
+        render(await fetchJson<SchedulesResponse>(root.dataset.url!));
       } catch {
         part('error').hidden = false;
       } finally {

@@ -73,6 +73,9 @@ function useTwoFingerDrag(map: L.Map, container: HTMLElement, hintText: string) 
   );
 }
 
+/** The blue stop dot used by the stop and home maps. */
+export const STOP_STYLE = { color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.85 };
+
 const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Popup for a stop marker: its name, a few lines of details and a link to the stop page. */

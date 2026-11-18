@@ -1,6 +1,7 @@
 ---
 import type { Lang } from '../i18n/ui';
 import { useTranslations } from '../i18n/utils';
+import { LOCATE_ICON_PATH } from '../lib/geo';
 import { buildSearchText } from '../lib/search';
 import { getStopName, getStopUrl, type Stop } from '../lib/stops';
 
@@ -52,7 +53,7 @@ const locateLabels = {
           type="search"
           autocomplete="off"
           placeholder={t('search.placeholder')}
-          class="w-full rounded-lg border border-slate-300 bg-white py-2 pr-3 pl-9 text-sm shadow-sm outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+          class="form-field pl-9"
           data-search-input
         />
       </div>
@@ -67,7 +68,7 @@ const locateLabels = {
         <svg class="size-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path
             fill-rule="evenodd"
-            d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.544l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+            d={LOCATE_ICON_PATH}
             clip-rule="evenodd"></path>
         </svg>
         {t('locate.button')}
@@ -147,7 +148,7 @@ const locateLabels = {
 </section>
 
 <script>
-  import { distanceMeters, formatDistance } from '../lib/geo';
+  import { canLocate, distanceMeters, formatDistance } from '../lib/geo';
   import { normalize, transliterate } from '../lib/search';
 
   const NEAREST_COUNT = 5;
@@ -327,8 +328,8 @@ const locateLabels = {
       button.addEventListener('click', () => actions[button.dataset.locateAction as LocateAction]());
     }
 
-    // Geolocation only works on HTTPS (and localhost); hide the button elsewhere.
-    if ('geolocation' in navigator && window.isSecureContext) {
+    // Hidden where geolocation can't work (no support, or not HTTPS).
+    if (canLocate()) {
       locateButton.hidden = false;
       locateButton.addEventListener('click', locate);
       // The same button on the home map (StopsMap.astro).

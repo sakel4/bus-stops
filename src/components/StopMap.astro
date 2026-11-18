@@ -15,8 +15,6 @@ const t = useTranslations(lang);
 const labels = {
   touchHint: t('map.touchHint'),
   bus: t('map.bus', { line: '{line}', time: '{time}' }),
-  now: t('arrivals.now'),
-  minutes: t('arrivals.minutes', { count: '{count}' }),
 };
 ---
 
@@ -33,9 +31,9 @@ const labels = {
 
 <script>
   import L from 'leaflet';
-  import type { Arrival } from '../lib/arrivals';
+  import type { StopArrivalsDetail } from '../lib/arrivals';
   import { getLineColor } from '../lib/lines';
-  import { busMarker, createMap } from '../lib/map';
+  import { busMarker, createMap, STOP_STYLE } from '../lib/map';
 
   /** On the first update, zoom out to show the buses arriving within this many minutes. */
   const FIT_MINUTES = 10;
@@ -44,7 +42,7 @@ const labels = {
 
   if (container) {
     const labels = JSON.parse(container.dataset.labels ?? '{}') as Record<
-      'touchHint' | 'bus' | 'now' | 'minutes',
+      'touchHint' | 'bus',
       string
     >;
     const position: L.LatLngTuple = [Number(container.dataset.lat), Number(container.dataset.lng)];
@@ -54,23 +52,14 @@ const labels = {
       17,
     );
 
-    L.circleMarker(position, {
-      radius: 8,
-      color: '#1d4ed8',
-      weight: 2,
-      fillColor: '#3b82f6',
-      fillOpacity: 0.85,
-    }).addTo(map);
+    L.circleMarker(position, { ...STOP_STYLE, radius: 8, weight: 2 }).addTo(map);
 
     // Live buses, from the arrivals that StopArrivals.astro loads and refreshes.
     const busLayer = L.layerGroup().addTo(map);
     let fitted = false;
 
-    const formatMinutes = (minutes: number) =>
-      minutes < 1 ? labels.now : labels.minutes.replace('{count}', String(minutes));
-
     window.addEventListener('stop:arrivals', (event) => {
-      const { arrivals } = (event as CustomEvent<{ arrivals: Arrival[] }>).detail;
+      const { arrivals } = (event as CustomEvent<StopArrivalsDetail>).detail;
       busLayer.clearLayers();
 
       for (const arrival of arrivals) {
@@ -79,9 +68,7 @@ const labels = {
           line: arrival.line,
           color: getLineColor(arrival.line),
           position: arrival.position,
-          label: labels.bus
-            .replace('{line}', arrival.line)
-            .replace('{time}', formatMinutes(arrival.minutes)),
+          label: labels.bus.replace('{line}', arrival.line).replace('{time}', arrival.time),
         }).addTo(busLayer);
       }
 

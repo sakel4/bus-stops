@@ -37,7 +37,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
 >
   <div class="h-full overflow-y-auto">
     <article
-      class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6"
+      class="page-content"
       data-line-page
       data-url={getLineDetailsUrl(line, lang)}
       data-live-url={getLineLiveUrl(line, lang)}
@@ -75,7 +75,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
           <label for="line-route" class="mb-2 block font-semibold">{t('line.route')}</label>
           <select
             id="line-route"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none disabled:animate-pulse disabled:bg-slate-100"
+            class="form-field disabled:animate-pulse disabled:bg-slate-100"
             disabled
             data-route></select>
         </section>
@@ -135,6 +135,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
 
 <script>
   import L from 'leaflet';
+  import { fetchJson, partOf, poll } from '../lib/dom';
   import { busMarker, createMap, stopPopupHtml } from '../lib/map';
   import type { LineDetailsResponse, LineLiveResponse, LineRoute } from '../lib/line-routes';
 
@@ -148,8 +149,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
       string
     >;
     const stopUrl = (code: string) => root.dataset.stopUrl!.replace(root.dataset.stopCode!, code);
-    const part = <T extends HTMLElement = HTMLElement>(name: string) =>
-      root.querySelector<T>(`[data-${name}]`)!;
+    const part = partOf(root);
     const routeSelect = part<HTMLSelectElement>('route');
     const stopList = part('stops');
     const rowTemplate = part<HTMLTemplateElement>('stop-row');
@@ -178,7 +178,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
         map = createMap(part('line-map'), { embedded: { touchHint: labels.touchHint } });
         routeLayer = L.featureGroup().addTo(map);
         busLayer = L.layerGroup().addTo(map);
-        loadLive();
+        startLive();
       }
       currentRoute = route;
       drawBuses();
@@ -244,25 +244,16 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
       }
     };
 
-    let liveTimer: number | undefined;
-    const loadLive = async () => {
-      clearTimeout(liveTimer);
+    // Refreshes while the tab is visible, once the map exists.
+    const startLive = poll(async () => {
       try {
-        const res = await fetch(root.dataset.liveUrl!);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        vehicles = ((await res.json()) as LineLiveResponse).vehicles;
+        vehicles = (await fetchJson<LineLiveResponse>(root.dataset.liveUrl!)).vehicles;
       } catch {
         // Not worth an error message: the route and stops still work without buses.
         vehicles = [];
       }
       drawBuses();
-      // Only keep polling while the tab is visible.
-      if (!document.hidden) liveTimer = window.setTimeout(loadLive, LIVE_REFRESH_MS);
-    };
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) clearTimeout(liveTimer);
-      else if (map) loadLive();
-    });
+    }, LIVE_REFRESH_MS);
 
     const showRoute = (route: LineRoute) => {
       stopList.replaceChildren(...route.stops.map(renderStop));
@@ -303,9 +294,7 @@ const stopUrl = getStopUrl({ code: STOP_CODE }, lang);
       part('content').hidden = false;
       root.setAttribute('aria-busy', 'true');
       try {
-        const res = await fetch(root.dataset.url!);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        render((await res.json()) as LineDetailsResponse);
+        render(await fetchJson<LineDetailsResponse>(root.dataset.url!));
       } catch {
         part('line-name').textContent = '';
         part('content').hidden = true;
