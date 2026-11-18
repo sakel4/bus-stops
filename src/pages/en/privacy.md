@@ -67,6 +67,8 @@ Data is not sold, rented or disclosed to any other third party, unless required 
 
 The App does not use cookies. It uses your browser's local storage only to remember your favourite stops, if you choose to add any. Only the stop codes are stored; they stay on your device and are never sent to the App's server or to any third party. You can delete them at any time by removing the stops from your favourites or by clearing this site's data in your browser settings.
 
+The App also keeps copies of its own files and of recently visited pages on your device (through a service worker), so it loads faster and opens without a connection. These copies contain no personal data and are never sent anywhere.
+
 This storage is strictly necessary to provide a feature you explicitly request (Article 5(3) of Directive 2002/58/EC, implemented in Greece by Article 4(5) of Law 3471/2006), so it does not require consent. The visitor statistics described in section 2.4 store nothing on your device. For these reasons, no cookie consent banner is shown.
 
 ## 6. Automated decision-making

@@ -17,11 +17,20 @@ interface Props {
   path?: string;
   /** The page shows a map: connect to the tile server early, as the first tiles are often the largest paint. */
   map?: boolean;
+  /** Keep the page out of search results (e.g. the offline page). */
+  noindex?: boolean;
 }
 
 const lang = getLang(Astro.currentLocale);
 const t = useTranslations(lang);
-const { title, fullTitle, description = t('site.description'), path = '', map = false } = Astro.props;
+const {
+  title,
+  fullTitle,
+  description = t('site.description'),
+  path = '',
+  map = false,
+  noindex = false,
+} = Astro.props;
 // The home page title also says what the site is, for search results and link previews.
 const homeTitle = `${t('site.name')} – ${t('site.title')}`;
 const pageTitle = fullTitle ?? (title ? `${title} · ${t('site.name')}` : homeTitle);
@@ -39,13 +48,21 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
 <html lang={lang} class="h-full">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: the installed app draws under the notch; the header and footer
+         pad themselves with the safe-area insets. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#1d4ed8" />
+    <!-- Installable app (PWA): one manifest per language, so each opens in its own language. -->
+    <link rel="manifest" href={lang === defaultLang ? '/manifest.webmanifest' : `/${lang}/manifest.webmanifest`} />
+    <meta name="apple-mobile-web-app-title" content={t('site.name')} />
+    <!-- iOS home-screen app: the blue header continues under the status bar. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     {map && <link rel="preconnect" href="https://tile.openstreetmap.org" />}
 
     <meta property="og:type" content="website" />
@@ -75,9 +92,11 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
     <link rel="alternate" hreflang="x-default" href={alternateUrl(defaultLang)} />
     <title>{pageTitle}</title>
   </head>
-  <body class="flex h-full flex-col bg-slate-50 text-slate-900 antialiased">
+  <body
+    class="flex h-full flex-col bg-slate-50 pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] text-slate-900 antialiased"
+  >
     <Analytics />
-    <header class="bg-blue-700 text-white shadow">
+    <header class="bg-blue-700 pt-[env(safe-area-inset-top)] text-white shadow">
       <div class="flex items-center justify-between gap-4 px-4 py-3">
         <a href={localizePath(lang)} class="flex items-center gap-2 text-lg font-semibold">
           <img src="/logo-56.webp" alt="" width="28" height="28" class="size-7" />
@@ -117,7 +136,9 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
     <main class="min-h-0 flex-1">
       <slot />
     </main>
-    <footer class="border-t border-slate-200 bg-white px-4 py-2 text-xs text-slate-500">
+    <footer
+      class="border-t border-slate-200 bg-white px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs text-slate-500"
+    >
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p>
           <!-- Short on phones to save space; the FAQ explains it in full. -->
@@ -135,5 +156,14 @@ const alternateUrl = (code: Lang) => new URL(localizePath(code, path), Astro.sit
         </nav>
       </div>
     </footer>
+    <script>
+      // Service worker (public/sw.js): faster repeat visits and an offline page. Production only:
+      // in development it would serve stale files.
+      if ('serviceWorker' in navigator && import.meta.env.PROD) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

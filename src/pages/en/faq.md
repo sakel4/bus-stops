@@ -35,6 +35,15 @@ When you press the button, your browser asks for permission to use your location
 
 Your location is never sent anywhere and is not stored. More in the [privacy policy](/en/privacy/).
 
+## Can I install it as an app?
+
+Yes. HopOn can go on your phone's home screen and open full screen like a regular app, without downloading anything from an app store.
+
+- **iPhone (Safari):** tap the Share button, then "Add to Home Screen".
+- **Android (Chrome):** open the ⋮ menu and tap "Install app" or "Add to Home screen".
+
+Pages you opened recently also open without a connection. Arrival times always need a connection. On iPhone, installing it also helps keep your favourite stops from being cleared.
+
 ## I found a mistake in a stop or a line. What's correct?
 
 The app's data may not always be up to date. The official source for stops, lines and timetables is always the [Astiko KTEL Irakleiou](https://astiko-irakleiou.gr/) website.
