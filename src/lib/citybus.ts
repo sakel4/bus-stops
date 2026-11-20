@@ -1,13 +1,17 @@
 // Server-only client for the citybus REST API. Never import this from browser code.
 
-import { CITYBUS_TOKEN } from 'astro:env/server';
-import type { Lang } from '../i18n/ui';
-import type { Arrival } from './arrivals';
-import { positionAlongPath } from './geo';
-import type { LineDetailsResponse, LineRoute, LiveVehicle } from './line-routes';
-import { getStopName, getStops } from './stops';
+import { CITYBUS_TOKEN } from "astro:env/server";
+import type { Lang } from "../i18n/ui";
+import type { Arrival } from "./arrivals";
+import { positionAlongPath } from "./geo";
+import type {
+  LineDetailsResponse,
+  LineRoute,
+  LiveVehicle,
+} from "./line-routes";
+import { getStopName, getStops } from "./stops";
 
-const API_URL = 'https://rest.citybus.gr/api/v1';
+const API_URL = "https://rest.citybus.gr/api/v1";
 // Heraklion's id in the citybus API.
 const CITY_ID = 110;
 const LIVE_CACHE_MS = 20_000;
@@ -28,7 +32,11 @@ interface LiveVehicles {
 // One entry per request; concurrent requests for it share one upstream call.
 const cache = new Map<string, { at: number; data: Promise<unknown> }>();
 
-function cached<T>(key: string, maxAgeMs: number, load: () => Promise<T>): Promise<T> {
+function cached<T>(
+  key: string,
+  maxAgeMs: number,
+  load: () => Promise<T>,
+): Promise<T> {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < maxAgeMs) return hit.data as Promise<T>;
 
@@ -41,26 +49,50 @@ function cached<T>(key: string, maxAgeMs: number, load: () => Promise<T>): Promi
   return entry.data;
 }
 
-async function request(path: string, lang: Lang): Promise<unknown> {
-  if (!CITYBUS_TOKEN) throw new Error('CITYBUS_TOKEN is not set');
+async function request(
+  path: string,
+  lang: Lang,
+  { notFound }: { notFound?: unknown } = {},
+): Promise<unknown> {
+  if (!CITYBUS_TOKEN) throw new Error("CITYBUS_TOKEN is not set");
 
   const res = await fetch(`${API_URL}/${lang}/${CITY_ID}/${path}`, {
-    headers: { Authorization: `Bearer ${CITYBUS_TOKEN}`, Accept: 'application/json' },
+    headers: {
+      Authorization: `Bearer ${CITYBUS_TOKEN}`,
+      Accept: "application/json",
+    },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (res.status === 401) {
-    throw new Error('citybus rejected the token (401); CITYBUS_TOKEN may have changed');
+    throw new Error(
+      "citybus rejected the token (401); CITYBUS_TOKEN may have changed",
+    );
   }
+  if (res.status === 404 && notFound !== undefined) return notFound;
   if (!res.ok) throw new Error(`citybus responded with ${res.status}`);
   return res.json();
 }
 
 const unexpected = (raw: unknown) =>
-  new Error(`Unexpected citybus response: ${JSON.stringify(raw).slice(0, 300)}`);
+  new Error(
+    `Unexpected citybus response: ${JSON.stringify(raw).slice(0, 300)}`,
+  );
 
-export function getLiveArrivals(code: string, lang: Lang): Promise<LiveArrivals> {
+// The live endpoints answer 404 when no bus is on its way (e.g. at night), not only for
+// unknown stops or lines. Callers only ask about known ones, so 404 means "nothing live".
+const NO_LIVE_ARRIVALS: UpstreamLiveResponse = { vehicles: [] };
+const NO_LIVE_VEHICLES: UpstreamVehicle[] = [];
+
+export function getLiveArrivals(
+  code: string,
+  lang: Lang,
+): Promise<LiveArrivals> {
   return cached(`live:${lang}:${code}`, LIVE_CACHE_MS, async () => ({
-    arrivals: parseArrivals(await request(`stops/live/${encodeURIComponent(code)}`, lang)),
+    arrivals: parseArrivals(
+      await request(`stops/live/${encodeURIComponent(code)}`, lang, {
+        notFound: NO_LIVE_ARRIVALS,
+      }),
+    ),
     fetchedAt: Date.now(),
   }));
 }
@@ -82,7 +114,8 @@ interface UpstreamLiveResponse {
 function parsePosition(v: Partial<UpstreamVehicle>): [number, number] | null {
   const lat = Number(v.latitude);
   const lng = Number(v.longitude);
-  if (!lat || !lng || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (!lat || !lng || !Number.isFinite(lat) || !Number.isFinite(lng))
+    return null;
   return [round(lat), round(lng)];
 }
 
@@ -93,7 +126,7 @@ function parseArrivals(raw: unknown): Arrival[] {
   return vehicles
     .map((v) => ({
       line: String(v.lineCode),
-      destination: String(v.routeName ?? ''),
+      destination: String(v.routeName ?? ""),
       minutes: Math.max(0, Math.round(Number(v.departureMins))),
       position: parsePosition(v),
     }))
@@ -102,25 +135,44 @@ function parseArrivals(raw: unknown): Arrival[] {
 }
 
 /** Buses of a line that are on the road right now, with their positions. */
-export function getLineVehicles(line: string, lang: Lang): Promise<LiveVehicles> {
+export function getLineVehicles(
+  line: string,
+  lang: Lang,
+): Promise<LiveVehicles> {
   return cached(`line-live:${lang}:${line}`, LIVE_CACHE_MS, async () => {
-    const raw = await request(`lines/live/${encodeURIComponent(line)}`, lang);
-    if (!Array.isArray(raw)) throw unexpected(raw);
-    const vehicles = (raw as Partial<UpstreamVehicle>[]).flatMap((v): LiveVehicle[] => {
-      const position = parsePosition(v);
-      return position
-        ? [{ route: String(v.routeCode ?? ''), routeName: cleanName(v.routeName), position }]
-        : [];
+    const raw = await request(`lines/live/${encodeURIComponent(line)}`, lang, {
+      notFound: NO_LIVE_VEHICLES,
     });
+    if (!Array.isArray(raw)) throw unexpected(raw);
+    const vehicles = (raw as Partial<UpstreamVehicle>[]).flatMap(
+      (v): LiveVehicle[] => {
+        const position = parsePosition(v);
+        return position
+          ? [
+              {
+                route: String(v.routeCode ?? ""),
+                routeName: cleanName(v.routeName),
+                position,
+              },
+            ]
+          : [];
+      },
+    );
     return { vehicles, fetchedAt: Date.now() };
   });
 }
 
 /** A line with each of its routes: the road it takes and its stops in order. */
-export function getLineDetails(line: string, lang: Lang): Promise<LineDetailsResponse> {
+export function getLineDetails(
+  line: string,
+  lang: Lang,
+): Promise<LineDetailsResponse> {
   return cached(`line:${lang}:${line}`, LINE_CACHE_MS, async () => {
     const path = `lines/${encodeURIComponent(line)}`;
-    const [info, points] = await Promise.all([request(path, lang), request(`${path}/points`, lang)]);
+    const [info, points] = await Promise.all([
+      request(path, lang),
+      request(`${path}/points`, lang),
+    ]);
     return parseLine(info, points, lang);
   });
 }
@@ -138,15 +190,19 @@ type UpstreamLinePoints = {
 
 // Route names come with stray spaces and trailing dashes, e.g. 'ΓΙΟΦΥΡΟ - ΑΕΡΟΔΡΟΜΙΟ -'.
 const cleanName = (name: unknown) =>
-  String(name ?? '')
-    .replace(/\s+/g, ' ')
-    .replace(/[\s.-]+$/, '')
+  String(name ?? "")
+    .replace(/\s+/g, " ")
+    .replace(/[\s.-]+$/, "")
     .trim();
 
 // About 1 m; keeps the response small.
 const round = (n: number) => Math.round(n * 1e5) / 1e5;
 
-function parseLine(rawInfo: unknown, rawPoints: unknown, lang: Lang): LineDetailsResponse {
+function parseLine(
+  rawInfo: unknown,
+  rawPoints: unknown,
+  lang: Lang,
+): LineDetailsResponse {
   const info = rawInfo as Partial<UpstreamLine> | null;
   if (!info || !Array.isArray(info.routes)) throw unexpected(rawInfo);
   if (!Array.isArray(rawPoints)) throw unexpected(rawPoints);
@@ -156,7 +212,10 @@ function parseLine(rawInfo: unknown, rawPoints: unknown, lang: Lang): LineDetail
       String(route.routeCode),
       [...(route.routePoints ?? [])]
         .sort((a, b) => a.sequence - b.sequence)
-        .map((p): [number, number] => [round(Number(p.latitude)), round(Number(p.longitude))])
+        .map((p): [number, number] => [
+          round(Number(p.latitude)),
+          round(Number(p.longitude)),
+        ])
         .filter(([lat, lng]) => Number.isFinite(lat) && Number.isFinite(lng)),
     ]),
   );
@@ -174,7 +233,10 @@ function parseLine(rawInfo: unknown, rawPoints: unknown, lang: Lang): LineDetail
       .filter((stop) => stop.routeCodes.includes(code))
       .map((stop) => ({
         stop,
-        position: positionAlongPath({ lat: stop.latitude, lng: stop.longitude }, pathPoints),
+        position: positionAlongPath(
+          { lat: stop.latitude, lng: stop.longitude },
+          pathPoints,
+        ),
       }))
       .sort((a, b) => a.position - b.position)
       .map(({ stop }) => ({
@@ -188,5 +250,5 @@ function parseLine(rawInfo: unknown, rawPoints: unknown, lang: Lang): LineDetail
     return [{ code, name: cleanName(route.name), path, stops: routeStops }];
   });
 
-  return { code: String(info.code ?? ''), name: cleanName(info.name), routes };
+  return { code: String(info.code ?? ""), name: cleanName(info.name), routes };
 }
