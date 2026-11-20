@@ -46,7 +46,6 @@ export default defineConfig({
       CITYBUS_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
       GLOBAL_CONFIG: envField.string({ context: 'server', access: 'secret', optional: true }),
       VERCEL_API_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
-      VERCEL_TEAM_ID: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
   },
   vite: {

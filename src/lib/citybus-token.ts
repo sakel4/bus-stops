@@ -15,7 +15,6 @@ import {
   CITYBUS_TOKEN,
   GLOBAL_CONFIG,
   VERCEL_API_TOKEN,
-  VERCEL_TEAM_ID,
 } from "astro:env/server";
 
 const TOKEN_KEY = "citybusToken";
@@ -114,9 +113,7 @@ async function saveStored(value: string): Promise<void> {
     );
     return;
   }
-  const url = new URL(`https://api.vercel.com/v1/global-config/${storeId}/items`);
-  if (VERCEL_TEAM_ID) url.searchParams.set("teamId", VERCEL_TEAM_ID);
-  const res = await fetch(url, {
+  const res = await fetch(`https://api.vercel.com/v1/global-config/${storeId}/items`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${VERCEL_API_TOKEN}`,

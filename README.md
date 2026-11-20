@@ -55,7 +55,6 @@ npm run dev            # http://localhost:4321
 | `CITYBUS_TOKEN` | No       | Bearer token for rest.citybus.gr. Server-only, never sent to the browser. Fallback only: the current token lives in Global Config and is refreshed automatically (see below). |
 | `GLOBAL_CONFIG` | Production | Vercel Global Config connection string, added when the store is connected to the project. Holds the citybus token under `citybusToken`. |
 | `VERCEL_API_TOKEN` | Production | Vercel access token that can write the Global Config store, so a refreshed token is shared by every function instance. |
-| `VERCEL_TEAM_ID` | If the store belongs to a team | Team id for the Global Config write. |
 | `SITE_URL`      | No       | Public origin used for absolute URLs (link previews, canonical links, sitemap, robots.txt). On Vercel the production domain is used automatically. |
 
 ### How it fits together
@@ -97,7 +96,7 @@ self.addEventListener('activate', (event) => {
 
 ### Deployment
 
-Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Connect a Global Config store to the project (this sets `GLOBAL_CONFIG`) and set `VERCEL_API_TOKEN` (plus `VERCEL_TEAM_ID` for a team store) in the project's environment variables. The API functions run in Frankfurt (`fra1`, see `vercel.json`).
+Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Connect a Global Config store to the project (this sets `GLOBAL_CONFIG`) and set `VERCEL_API_TOKEN` in the project's environment variables. The API functions run in Frankfurt (`fra1`, see `vercel.json`).
 
 ## Support the project
 
