@@ -15,6 +15,7 @@
     "@astrojs/vercel": "^11.0.22",
     "@tailwindcss/vite": "^4.3.5",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/global-config": "^1.5.1",
     "astro": "^7.4.12",
     "leaflet": "^1.9.4",
     "tailwindcss": "^4.3.5"

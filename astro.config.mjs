@@ -42,8 +42,10 @@ export default defineConfig({
   },
   env: {
     schema: {
-      // Read at runtime on the server only; see .env.example.
+      // Read at runtime on the server only; see .env.example and src/lib/citybus-token.ts.
       CITYBUS_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
+      GLOBAL_CONFIG: envField.string({ context: 'server', access: 'secret', optional: true }),
+      VERCEL_API_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
   },
   vite: {

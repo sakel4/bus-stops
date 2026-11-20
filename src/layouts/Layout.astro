@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import LanguagePicker from '../components/LanguagePicker.astro';
 import SupportDialog from '../components/SupportDialog.astro';
+import ServiceNotice from '../components/ServiceNotice.astro';
 import { defaultLang, languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import Analytics from '@vercel/analytics/astro';
@@ -148,6 +149,7 @@ const pageUrl = alternateUrl(lang);
         </div>
       </div>
     </header>
+    <ServiceNotice lang={lang} />
     <main class="min-h-0 flex-1">
       <slot />
     </main>

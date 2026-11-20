@@ -1,8 +1,8 @@
 // Server-only client for the citybus REST API. Never import this from browser code.
 
-import { CITYBUS_TOKEN } from "astro:env/server";
 import type { Lang } from "../i18n/ui";
 import type { Arrival } from "./arrivals";
+import { getToken, refreshToken } from "./citybus-token";
 import { positionAlongPath } from "./geo";
 import type {
   LineDetailsResponse,
@@ -49,24 +49,35 @@ function cached<T>(
   return entry.data;
 }
 
+/** citybus rejected our token and no new one could be found (see citybus-token.ts). */
+export class CitybusAuthError extends Error {
+  constructor() {
+    super("citybus rejected the token (401) and refreshing it failed");
+    this.name = "CitybusAuthError";
+  }
+}
+
+const call = (path: string, lang: Lang, token: string) =>
+  fetch(`${API_URL}/${lang}/${CITY_ID}/${path}`, {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+
 async function request(
   path: string,
   lang: Lang,
   { notFound }: { notFound?: unknown } = {},
 ): Promise<unknown> {
-  if (!CITYBUS_TOKEN) throw new Error("CITYBUS_TOKEN is not set");
+  const token = (await getToken()) ?? (await refreshToken(undefined));
+  if (!token) throw new CitybusAuthError();
 
-  const res = await fetch(`${API_URL}/${lang}/${CITY_ID}/${path}`, {
-    headers: {
-      Authorization: `Bearer ${CITYBUS_TOKEN}`,
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
+  let res = await call(path, lang, token);
   if (res.status === 401) {
-    throw new Error(
-      "citybus rejected the token (401); CITYBUS_TOKEN may have changed",
-    );
+    // The token expired or changed: get a new one and try once more.
+    const fresh = await refreshToken(token);
+    if (!fresh) throw new CitybusAuthError();
+    res = await call(path, lang, fresh);
+    if (res.status === 401) throw new CitybusAuthError();
   }
   if (res.status === 404 && notFound !== undefined) return notFound;
   if (!res.ok) throw new Error(`citybus responded with ${res.status}`);
