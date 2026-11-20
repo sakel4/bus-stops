@@ -38,7 +38,7 @@ Built with [Astro](https://astro.build), [Tailwind CSS](https://tailwindcss.com)
 
 ```sh
 npm install
-cp .env.example .env   # then set CITYBUS_TOKEN
+cp .env.example .env   # then set CITYBUS_TOKEN (required locally)
 npm run dev            # http://localhost:4321
 ```
 
@@ -52,7 +52,10 @@ npm run dev            # http://localhost:4321
 
 | Variable        | Required | Purpose                                                                 |
 | --------------- | -------- | ----------------------------------------------------------------------- |
-| `CITYBUS_TOKEN` | Yes      | Bearer token for rest.citybus.gr. Server-only, never sent to the browser. Without it, stop pages show "Arrivals are unavailable". |
+| `CITYBUS_TOKEN` | No       | Bearer token for rest.citybus.gr. Server-only, never sent to the browser. Fallback only: the current token lives in Global Config and is refreshed automatically (see below). |
+| `GLOBAL_CONFIG` | Production | Vercel Global Config connection string, added when the store is connected to the project. Holds the citybus token under `citybusToken`. |
+| `VERCEL_API_TOKEN` | Production | Vercel access token that can write the Global Config store, so a refreshed token is shared by every function instance. |
+| `VERCEL_TEAM_ID` | If the store belongs to a team | Team id for the Global Config write. |
 | `SITE_URL`      | No       | Public origin used for absolute URLs (link previews, canonical links, sitemap, robots.txt). On Vercel the production domain is used automatically. |
 
 ### How it fits together
@@ -61,6 +64,7 @@ npm run dev            # http://localhost:4321
 - The only server code is two endpoints that proxy `rest.citybus.gr` with the token (`src/lib/citybus.ts`). The citybus API only allows browser requests from its own site, so its data has to go through them.
   - `src/pages/api/stops/[code]/live.ts` caches each stop for 20 seconds and returns a small JSON list of arrivals.
   - `src/pages/api/lines/[line].ts` fetches a line and the points of its routes, orders each route's stops along its path, and returns compact JSON. It's cached for an hour.
+- The citybus token (`src/lib/citybus-token.ts`) is read from Global Config (cached for a minute in each function), falling back to `CITYBUS_TOKEN`. When citybus answers 401, the server takes the new token from `https://irakleio.citybus.gr/el/stops` (the token citybus gives its own site), saves it to Global Config and retries once. If that fails too, the endpoints answer `503 {"error":"service_issue"}` and pages show a banner (`ServiceNotice.astro`). In local development (`npm run dev`) only `CITYBUS_TOKEN` from `.env` is used: no Global Config and no refresh.
 - SEO: `@astrojs/sitemap` writes `sitemap-index.xml` (with each page's other-language version), `src/pages/robots.txt.ts` links to it, `Layout.astro` adds canonical and hreflang links, and `src/lib/seo.ts` builds the schema.org JSON-LD (website, bus stops, breadcrumbs, FAQ).
 - Text pages (`faq.md`, `privacy.md`) are Markdown under `src/pages/` and `src/pages/en/`; UI strings live in `src/i18n/ui.ts`.
 
@@ -93,7 +97,7 @@ self.addEventListener('activate', (event) => {
 
 ### Deployment
 
-Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Set `CITYBUS_TOKEN` in the project's environment variables. The API functions run in Frankfurt (`fra1`, see `vercel.json`).
+Deployed on [Vercel](https://vercel.com) with `@astrojs/vercel`. Connect a Global Config store to the project (this sets `GLOBAL_CONFIG`) and set `VERCEL_API_TOKEN` (plus `VERCEL_TEAM_ID` for a team store) in the project's environment variables. The API functions run in Frankfurt (`fra1`, see `vercel.json`).
 
 ## Support the project
 

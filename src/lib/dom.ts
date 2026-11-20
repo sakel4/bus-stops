@@ -6,10 +6,25 @@ export function partOf(root: HTMLElement) {
     root.querySelector<T>(`[data-${name}]`)!;
 }
 
+/**
+ * Window event fired when an endpoint answers `{ error: 'service_issue' }` (citybus rejected our
+ * token and refreshing it failed), with `detail: true`; fired with `detail: false` on the next successful response.
+ * ServiceNotice.astro shows a banner while it is true.
+ */
+export const SERVICE_ISSUE = 'app:service-issue';
+
+const reportServiceIssue = (issue: boolean) =>
+  window.dispatchEvent(new CustomEvent<boolean>(SERVICE_ISSUE, { detail: issue }));
+
 /** GETs a JSON response from one of our endpoints; throws on HTTP errors. */
 export async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (body?.error === 'service_issue') reportServiceIssue(true);
+    throw new Error(`HTTP ${res.status}`);
+  }
+  reportServiceIssue(false);
   return (await res.json()) as T;
 }
 

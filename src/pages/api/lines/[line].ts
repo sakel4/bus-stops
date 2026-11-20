@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getLangParam, json } from '../../../lib/api';
+import { getLangParam, json, upstreamError } from '../../../lib/api';
 import { getLineDetails } from '../../../lib/citybus';
 import { getLineCodes } from '../../../lib/line-routes';
 
@@ -21,6 +21,6 @@ export const GET: APIRoute = async ({ params, url }) => {
     return json(await getLineDetails(line, lang), 200, 'public, max-age=3600, s-maxage=3600');
   } catch (err) {
     console.error(`[line] ${line} (${lang}):`, err);
-    return json({ error: 'upstream_unavailable' }, 502);
+    return upstreamError(err);
   }
 };
