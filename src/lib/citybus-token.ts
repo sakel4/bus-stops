@@ -57,11 +57,13 @@ export function refreshToken(rejected: string | undefined): Promise<string | und
 }
 
 async function refresh(rejected: string | undefined): Promise<string | undefined> {
+  // Checked first so an outage doesn't cost a consistent read per request; a token another
+  // instance saves meanwhile still reaches us within a minute through getToken().
+  if (Date.now() - lastFailedRefreshAt < RETRY_REFRESH_AFTER_MS) return undefined;
+
   // Another instance may have saved a new token already: no need to scrape.
   const stored = await readStored({ consistentRead: true });
   if (stored && stored !== rejected) return remember(stored);
-
-  if (Date.now() - lastFailedRefreshAt < RETRY_REFRESH_AFTER_MS) return undefined;
 
   const scraped = await scrapeToken().catch((err) => {
     console.error("[citybus token] couldn't get a new token:", err);

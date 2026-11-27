@@ -39,7 +39,7 @@ const mapData = {
 <script>
   import L from 'leaflet';
   import { canLocate, LOCATE_ICON_PATH } from '../lib/geo';
-  import { canHover, createMap, STOP_STYLE, stopPopupHtml } from '../lib/map';
+  import { canHover, createMap, escape, STOP_STYLE, stopPopupHtml } from '../lib/map';
 
   const HIGHLIGHT_STYLE = { color: '#c2410c', fillColor: '#f97316', fillOpacity: 1 };
 
@@ -75,7 +75,7 @@ const mapData = {
     for (const stop of stops) {
       const marker = L.circleMarker([stop.lat, stop.lng], { ...STOP_STYLE, radius: 6, weight: 2 });
       // Names on hover save opening popups one by one (mouse only; a tap opens the popup).
-      if (hover) marker.bindTooltip(stop.name, { direction: 'top', offset: [0, -6] });
+      if (hover) marker.bindTooltip(escape(stop.name), { direction: 'top', offset: [0, -6] });
       marker.bindPopup(
         stopPopupHtml({
           name: stop.name,

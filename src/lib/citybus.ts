@@ -260,6 +260,8 @@ function parseLine(
 
     return [{ code, name: cleanName(route.name), path, stops: routeStops }];
   });
+  // Every line we serve has routes: none means a bad answer, which must not be cached for an hour.
+  if (routes.length === 0) throw unexpected(rawInfo);
 
   return { code: String(info.code ?? ""), name: cleanName(info.name), routes };
 }
