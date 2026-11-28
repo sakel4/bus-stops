@@ -22,6 +22,7 @@ const labels = {
   data-stop-map
   data-lat={stop.latitude}
   data-lng={stop.longitude}
+  data-bearing={stop.bearing}
   data-labels={JSON.stringify(labels)}
   class="z-0 h-full w-full"
   role="region"
@@ -33,7 +34,7 @@ const labels = {
   import L from 'leaflet';
   import type { StopArrivalsDetail } from '../lib/arrivals';
   import { getLineColor } from '../lib/lines';
-  import { busMarker, createMap, STOP_STYLE } from '../lib/map';
+  import { busMarker, createMap, STOP_STYLE, stopMarker } from '../lib/map';
 
   /** On the first update, zoom out to show the buses arriving within this many minutes. */
   const FIT_MINUTES = 10;
@@ -73,7 +74,8 @@ const labels = {
       17,
     );
 
-    L.circleMarker(position, { ...STOP_STYLE, radius: 8, weight: 2 }).addTo(map);
+    const bearing = container.dataset.bearing ? Number(container.dataset.bearing) : null;
+    stopMarker(position, { ...STOP_STYLE, radius: 8, weight: 2, bearing }).addTo(map);
 
     // Live buses, from the arrivals that StopArrivals.astro loads and refreshes.
     const busLayer = L.layerGroup().addTo(map);

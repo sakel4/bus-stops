@@ -76,6 +76,47 @@ function useTwoFingerDrag(map: L.Map, container: HTMLElement, hintText: string) 
 /** The blue stop dot used by the stop and home maps. */
 export const STOP_STYLE = { color: '#1d4ed8', fillColor: '#3b82f6', fillOpacity: 0.85 };
 
+/** Below this radius the dot is too small to show the arrow (city-wide zoom levels). */
+const MIN_ARROW_RADIUS = 6;
+
+// shortcut: draws through Leaflet 1.9's canvas internals (_renderer._ctx, _point, _radius);
+// re-check when upgrading Leaflet (2.0 has a Marker `rotation` option).
+const StopMarker = L.CircleMarker.extend({
+  // Leaflet's internals are untyped.
+  _updatePath(this: any) {
+    (L.CircleMarker.prototype as any)._updatePath.call(this);
+    const bearing: number | null | undefined = this.options.bearing;
+    const ctx: CanvasRenderingContext2D | undefined = this._renderer?._ctx;
+    const r: number = this._radius;
+    if (bearing == null || !ctx || this._empty() || r < MIN_ARROW_RADIUS) return;
+
+    // A white triangle inside the dot, pointing the way the bus leaves the stop.
+    ctx.save();
+    ctx.translate(this._point.x, this._point.y);
+    ctx.rotate((bearing * Math.PI) / 180);
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 0.65);
+    ctx.lineTo(r * 0.5, r * 0.4);
+    ctx.lineTo(0, r * 0.15);
+    ctx.lineTo(-r * 0.5, r * 0.4);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+  },
+}) as unknown as new (
+  latlng: L.LatLngExpression,
+  options: L.CircleMarkerOptions & { bearing: number | null },
+) => L.CircleMarker;
+
+/** A stop dot that, zoomed in, shows an arrow for the direction buses travel from it. */
+export function stopMarker(
+  latlng: L.LatLngExpression,
+  options: L.CircleMarkerOptions & { bearing: number | null },
+): L.CircleMarker {
+  return new StopMarker(latlng, options);
+}
+
 export const escape = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Popup for a stop marker: its name, a few lines of details and a link to the stop page. */
