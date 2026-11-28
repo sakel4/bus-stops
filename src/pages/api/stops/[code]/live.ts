@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ params, url }) => {
   try {
     const { arrivals, fetchedAt } = await getLiveArrivals(code, lang);
     const body: LiveArrivalsResponse = { arrivals, updatedAt: new Date(fetchedAt).toISOString() };
-    return json(body, 200, 'public, max-age=15');
+    return json(body, 200, 'public, max-age=15, s-maxage=15');
   } catch (err) {
     console.error(`[live arrivals] stop ${code} (${lang}):`, err);
     return upstreamError(err);

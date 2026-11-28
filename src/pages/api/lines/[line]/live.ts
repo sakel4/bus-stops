@@ -19,7 +19,7 @@ export const GET: APIRoute = async ({ params, url }) => {
   try {
     const { vehicles, fetchedAt } = await getLineVehicles(line, lang);
     const body: LineLiveResponse = { vehicles, updatedAt: new Date(fetchedAt).toISOString() };
-    return json(body, 200, 'public, max-age=15');
+    return json(body, 200, 'public, max-age=15, s-maxage=15');
   } catch (err) {
     console.error(`[line live] ${line} (${lang}):`, err);
     return upstreamError(err);

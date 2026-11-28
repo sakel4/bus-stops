@@ -40,6 +40,7 @@ Built with [Astro](https://astro.build), [Tailwind CSS](https://tailwindcss.com)
 npm install
 cp .env.example .env   # then set CITYBUS_TOKEN (required locally)
 npm run dev            # http://localhost:4321
+npm test               # unit tests (vitest)
 ```
 
 | Command           | What it does                              |
