@@ -3,6 +3,7 @@ import '../styles/global.css';
 import LanguagePicker from '../components/LanguagePicker.astro';
 import SupportDialog from '../components/SupportDialog.astro';
 import ServiceNotice from '../components/ServiceNotice.astro';
+import BottomNav from '../components/BottomNav.astro';
 import { defaultLang, languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import Analytics from '@vercel/analytics/astro';
@@ -113,38 +114,37 @@ const pageUrl = alternateUrl(lang);
   >
     <Analytics />
     <header class="bg-blue-700 pt-[env(safe-area-inset-top)] text-white shadow">
-      <div class="flex items-center justify-between gap-4 px-4 py-3">
+      <div class="flex items-center gap-6 px-4 py-3">
         <a href={localizePath(lang)} class="flex items-center gap-2 text-lg font-semibold">
           <img src="/logo-56.webp" alt="" width="28" height="28" class="size-7" />
           {t('site.name')}
         </a>
-        <div class="flex shrink-0 items-center gap-2">
-          <!-- Icon only on phones, where the site title already takes most of the row. -->
+        <!-- Larger screens only; phones and small tablets have the bottom tab bar (BottomNav.astro).
+             Short labels up to 1024px, so the row fits at 768px in Greek. -->
+        <!-- No Home link: the logo already goes there. -->
+        <nav aria-label={t('nav.main')} class="hidden items-center gap-1 md:flex">
           <!-- Opens the home page with the Favourites list selected (StopList.astro). -->
-          <a
-            href={`${localizePath(lang)}#favorites`}
-            class="nav-link"
-            aria-label={t('nav.favorites')}
-          >
-            <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d={STAR_ICON_PATH}></path>
-            </svg>
-            <span class="hidden sm:inline" aria-hidden="true">{t('nav.favorites')}</span>
+          <a href={`${localizePath(lang)}#favorites`} class="nav-link">
+            {t('nav.favorites')}
           </a>
           <a
             href={localizePath(lang, 'schedules')}
             class="nav-link"
             aria-current={path === 'schedules' ? 'page' : undefined}
-            aria-label={t('nav.schedules')}
           >
-            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path
-                fill-rule="evenodd"
-                d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
-                clip-rule="evenodd"></path>
-            </svg>
-            <span class="hidden sm:inline" aria-hidden="true">{t('nav.schedules')}</span>
+            <span class="lg:hidden">{t('nav.schedulesShort')}</span>
+            <span class="hidden lg:inline">{t('nav.schedules')}</span>
           </a>
+          <a
+            href={localizePath(lang, 'destinations')}
+            class="nav-link"
+            aria-current={path.startsWith('destinations') ? 'page' : undefined}
+          >
+            <span class="lg:hidden">{t('nav.destinationsShort')}</span>
+            <span class="hidden lg:inline">{t('nav.destinations')}</span>
+          </a>
+        </nav>
+        <div class="ml-auto shrink-0">
           <LanguagePicker lang={lang} path={path} />
         </div>
       </div>
@@ -153,20 +153,15 @@ const pageUrl = alternateUrl(lang);
     <main class="min-h-0 flex-1">
       <slot />
     </main>
+    <BottomNav lang={lang} path={path} />
+    <!-- Larger screens only; on phones these links are in the tab bar's "More" sheet. -->
     <footer
-      class="border-t border-slate-200 bg-white px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs text-slate-500"
+      class="hidden border-t border-slate-200 bg-white px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs text-slate-500 md:block"
     >
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <p>
-          <!-- Short on phones to save space; the FAQ explains it in full. -->
-          <span class="sm:hidden">{t('footer.unofficial')}</span>
-          <span class="hidden sm:inline">{t('footer.disclaimer')}</span>
-        </p>
+        <p>{t('footer.disclaimer')}</p>
         <nav class="flex gap-4">
           <SupportDialog lang={lang} />
-          <a href={localizePath(lang, 'destinations')} class="hover:text-slate-900 hover:underline">
-            {t('footer.destinations')}
-          </a>
           <a href={localizePath(lang, 'faq')} class="hover:text-slate-900 hover:underline">
             {t('footer.faq')}
           </a>

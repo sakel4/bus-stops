@@ -82,14 +82,19 @@ const t = useTranslations(lang);
 </dialog>
 
 <script>
-  const open = document.querySelector<HTMLAnchorElement>('[data-support-open]');
+  // Opened from the footer and from the tab bar's "More" sheet (BottomNav.astro).
+  const opens = document.querySelectorAll<HTMLAnchorElement>('[data-support-open]');
   const dialog = document.querySelector<HTMLDialogElement>('[data-support-dialog]');
 
-  if (open && dialog && typeof dialog.showModal === 'function') {
-    open.addEventListener('click', (event) => {
-      event.preventDefault();
-      dialog.showModal();
-    });
+  if (dialog && typeof dialog.showModal === 'function') {
+    // The footer is hidden on phones, and a dialog inside a hidden element never shows.
+    document.body.append(dialog);
+    for (const open of opens) {
+      open.addEventListener('click', (event) => {
+        event.preventDefault();
+        dialog.showModal();
+      });
+    }
     // Close on a click on the backdrop, for browsers without closedby="any". The content is
     // wrapped in a padded div, so only backdrop clicks land on the dialog element itself.
     dialog.addEventListener('click', (event) => {
