@@ -1,7 +1,6 @@
 ---
 import type { Lang } from '../i18n/ui';
 import { localizePath, useTranslations } from '../i18n/utils';
-import { STAR_ICON_PATH } from '../lib/favorites';
 import { KOFI_URL } from '../lib/support';
 
 interface Props {
@@ -31,13 +30,6 @@ const sheetLink = 'block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-7
         clip-rule="evenodd"></path>
     </svg>
     {t('nav.home')}
-  </a>
-  <!-- Opens the home page with the Favourites list selected (StopList.astro). -->
-  <a href={`${localizePath(lang)}#favorites`} class={tab}>
-    <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d={STAR_ICON_PATH}></path>
-    </svg>
-    {t('nav.favorites')}
   </a>
   <a href={localizePath(lang, 'schedules')} class={tab} aria-current={current(path === 'schedules')}>
     <svg class="size-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
