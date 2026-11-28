@@ -1,0 +1,115 @@
+---
+import type { Lang } from '../i18n/ui';
+import { localizePath, useTranslations } from '../i18n/utils';
+import { STAR_ICON_PATH } from '../lib/favorites';
+import { KOFI_URL } from '../lib/support';
+
+interface Props {
+  lang: Lang;
+  /** Path without locale prefix, to mark the current tab. */
+  path: string;
+}
+
+const { lang, path } = Astro.props;
+const t = useTranslations(lang);
+const current = (active: boolean) => (active ? 'page' : undefined);
+const tab =
+  'flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[11px] font-medium text-slate-500 transition-colors hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none focus-visible:ring-inset aria-[current=page]:text-blue-700';
+const sheetLink = 'block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100';
+---
+
+<!-- Phones and small tablets: app-style tab bar in place of the header links and the footer (Layout.astro). -->
+<nav
+  aria-label={t('nav.main')}
+  class="flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
+>
+  <a href={localizePath(lang)} class={tab} aria-current={current(path === '')}>
+    <svg class="size-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        fill-rule="evenodd"
+        d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.544l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+        clip-rule="evenodd"></path>
+    </svg>
+    {t('nav.home')}
+  </a>
+  <!-- Opens the home page with the Favourites list selected (StopList.astro). -->
+  <a href={`${localizePath(lang)}#favorites`} class={tab}>
+    <svg class="size-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d={STAR_ICON_PATH}></path>
+    </svg>
+    {t('nav.favorites')}
+  </a>
+  <a href={localizePath(lang, 'schedules')} class={tab} aria-current={current(path === 'schedules')}>
+    <svg class="size-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        fill-rule="evenodd"
+        d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
+        clip-rule="evenodd"></path>
+    </svg>
+    {t('nav.schedulesShort')}
+  </a>
+  <a
+    href={localizePath(lang, 'destinations')}
+    class={tab}
+    aria-current={current(path.startsWith('destinations'))}
+  >
+    <svg class="size-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.524l2.078-.64A.75.75 0 0 0 18 12.25v-8.5a.75.75 0 0 0-.904-.734l-2.38.501a7.25 7.25 0 0 1-4.186-.363l-.502-.2a8.75 8.75 0 0 0-5.053-.439l-1.475.31V2.75Z"
+      ></path>
+    </svg>
+    {t('nav.destinationsShort')}
+  </a>
+  <button
+    type="button"
+    class={tab}
+    aria-current={current(path === 'faq' || path === 'privacy')}
+    aria-haspopup="dialog"
+    data-more-open
+  >
+    <svg class="size-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        d="M3 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM11.5 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0ZM20 10a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+      ></path>
+    </svg>
+    {t('nav.more')}
+  </button>
+</nav>
+
+<!-- "More" bottom sheet: the links that sit in the footer on larger screens. -->
+<dialog
+  class="mx-0 mt-auto mb-0 w-full max-w-none rounded-t-2xl bg-white p-0 shadow-xl backdrop:bg-slate-900/50"
+  aria-label={t('nav.more')}
+  closedby="any"
+  data-more-sheet
+>
+  <div class="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <a href={localizePath(lang, 'faq')} class={sheetLink}>{t('footer.faq')}</a>
+    <a href={localizePath(lang, 'privacy')} class={sheetLink}>{t('footer.privacy')}</a>
+    <!-- Opens the support dialog (SupportDialog.astro); without JavaScript it goes to Ko-fi. -->
+    <a
+      href={KOFI_URL}
+      target="_blank"
+      rel="noopener"
+      class="mt-1 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-800 ring-1 ring-blue-200 ring-inset hover:bg-blue-100"
+      data-support-open
+    >
+      <img src="/kofi_symbol.svg" alt="" width="25" height="20" class="h-4 w-auto" />
+      {t('support.link')}
+    </a>
+    <p class="px-3 pt-2 text-xs text-slate-500">{t('footer.disclaimer')}</p>
+  </div>
+</dialog>
+
+<script>
+  const open = document.querySelector<HTMLButtonElement>('[data-more-open]');
+  const sheet = document.querySelector<HTMLDialogElement>('[data-more-sheet]');
+
+  if (open && sheet && typeof sheet.showModal === 'function') {
+    open.addEventListener('click', () => sheet.showModal());
+    // Close on a backdrop click (browsers without closedby="any") and when a link is followed.
+    sheet.addEventListener('click', (event) => {
+      if (event.target === sheet || (event.target as Element).closest('a')) sheet.close();
+    });
+  }
+</script>

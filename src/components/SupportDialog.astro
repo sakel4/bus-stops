@@ -11,19 +11,16 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 ---
 
-<!-- Footer link: opens the dialog below. Without JavaScript it goes straight to Ko-fi. -->
+<!-- Footer link: opens the dialog below. Without JavaScript it goes straight to Ko-fi.
+     A light blue pill with the Ko-fi cup, so it stands out among the plain footer links. -->
 <a
   href={KOFI_URL}
   target="_blank"
   rel="noopener"
-  class="inline-flex items-center gap-1 hover:text-slate-900 hover:underline"
+  class="inline-flex items-center gap-2 rounded-full bg-blue-50 py-1 pr-3.5 pl-2.5 font-medium text-blue-800 ring-1 ring-blue-200 transition-colors ring-inset hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none"
   data-support-open
 >
-  <svg class="size-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-    <path
-      d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z"
-    ></path>
-  </svg>
+  <img src="/kofi_symbol.svg" alt="" width="20" height="16" class="h-3.5 w-auto" />
   {t('support.link')}
 </a>
 
@@ -67,14 +64,9 @@ const t = useTranslations(lang);
       href={KOFI_URL}
       target="_blank"
       rel="noopener"
-      class="mt-5 flex items-center justify-center gap-2 rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-600 focus-visible:ring-2 focus-visible:ring-rose-500/50 focus-visible:ring-offset-2 focus-visible:outline-none"
+      class="mt-5 flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:outline-none"
     >
-      <!-- Coffee cup, as on Ko-fi. -->
-      <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-        <path d="M6 2v2M10 2v2M14 2v2"></path>
-      </svg>
+      <img src="/kofi_symbol.svg" alt="" width="25" height="20" class="h-5 w-auto" />
       {t('support.donate')}
     </a>
     <p class="mt-2 text-center text-xs text-slate-500">{t('support.external')}</p>
@@ -82,14 +74,19 @@ const t = useTranslations(lang);
 </dialog>
 
 <script>
-  const open = document.querySelector<HTMLAnchorElement>('[data-support-open]');
+  // Opened from the footer and from the tab bar's "More" sheet (BottomNav.astro).
+  const opens = document.querySelectorAll<HTMLAnchorElement>('[data-support-open]');
   const dialog = document.querySelector<HTMLDialogElement>('[data-support-dialog]');
 
-  if (open && dialog && typeof dialog.showModal === 'function') {
-    open.addEventListener('click', (event) => {
-      event.preventDefault();
-      dialog.showModal();
-    });
+  if (dialog && typeof dialog.showModal === 'function') {
+    // The footer is hidden on phones, and a dialog inside a hidden element never shows.
+    document.body.append(dialog);
+    for (const open of opens) {
+      open.addEventListener('click', (event) => {
+        event.preventDefault();
+        dialog.showModal();
+      });
+    }
     // Close on a click on the backdrop, for browsers without closedby="any". The content is
     // wrapped in a padded div, so only backdrop clicks land on the dialog element itself.
     dialog.addEventListener('click', (event) => {

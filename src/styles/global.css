@@ -20,9 +20,9 @@
   @apply rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:outline-none;
 }
 
-/* Pill link in the blue header (favourites, timetables). Icon only on phones. */
+/* Link in the blue header's navigation (larger screens); the current page is a white pill. */
 @utility nav-link {
-  @apply flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium text-blue-50 ring-1 ring-white/25 transition-colors ring-inset hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none aria-[current=page]:bg-white aria-[current=page]:text-blue-800;
+  @apply flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-blue-50 transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none aria-[current=page]:bg-white aria-[current=page]:text-blue-800;
 }
 
 /* One option of a segmented control (e.g. All / Favourites); the selected one has aria-pressed. */
