@@ -455,7 +455,7 @@ const locateLabels = {
     onFavoritesChange(updateFavoritesCount);
     updateFavoritesCount();
 
-    // The header's Favourites link points to "#favorites" on this page.
+    // Old bookmarks and shared links may still point to "#favorites" on this page.
     const takeFavoritesHash = () => {
       if (location.hash !== '#favorites') return false;
       // Drop the hash, so the link works again when clicked a second time.

@@ -7,7 +7,6 @@ import BottomNav from '../components/BottomNav.astro';
 import { defaultLang, languages, type Lang } from '../i18n/ui';
 import { getLang, localizePath, useTranslations } from '../i18n/utils';
 import Analytics from '@vercel/analytics/astro';
-import { STAR_ICON_PATH } from '../lib/favorites';
 
 interface Props {
   /** Page name; shown as "{title} · {site title}". */
@@ -123,10 +122,6 @@ const pageUrl = alternateUrl(lang);
              Short labels up to 1024px, so the row fits at 768px in Greek. -->
         <!-- No Home link: the logo already goes there. -->
         <nav aria-label={t('nav.main')} class="hidden items-center gap-1 md:flex">
-          <!-- Opens the home page with the Favourites list selected (StopList.astro). -->
-          <a href={`${localizePath(lang)}#favorites`} class="nav-link">
-            {t('nav.favorites')}
-          </a>
           <a
             href={localizePath(lang, 'schedules')}
             class="nav-link"
