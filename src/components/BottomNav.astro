@@ -87,7 +87,14 @@ const sheetLink = 'block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-7
     <a href={localizePath(lang, 'faq')} class={sheetLink}>{t('footer.faq')}</a>
     <a href={localizePath(lang, 'privacy')} class={sheetLink}>{t('footer.privacy')}</a>
     <!-- Opens the support dialog (SupportDialog.astro); without JavaScript it goes to Ko-fi. -->
-    <a href={KOFI_URL} target="_blank" rel="noopener" class={sheetLink} data-support-open>
+    <a
+      href={KOFI_URL}
+      target="_blank"
+      rel="noopener"
+      class="mt-1 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-800 ring-1 ring-blue-200 ring-inset hover:bg-blue-100"
+      data-support-open
+    >
+      <img src="/kofi_symbol.svg" alt="" width="25" height="20" class="h-4 w-auto" />
       {t('support.link')}
     </a>
     <p class="px-3 pt-2 text-xs text-slate-500">{t('footer.disclaimer')}</p>
