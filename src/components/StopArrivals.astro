@@ -64,7 +64,10 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     <li class="flex items-center gap-3 py-2.5">
       <a class="line-chip min-w-12 shrink-0 px-2 py-1 text-center" data-line></a>
       <span class="min-w-0 flex-1 truncate text-sm" data-destination></span>
-      <span class="shrink-0 text-sm font-semibold tabular-nums" data-minutes></span>
+      <span class="flex shrink-0 flex-col items-end tabular-nums">
+        <span class="text-sm font-semibold" data-minutes></span>
+        <span class="text-xs text-slate-500" data-clock></span>
+      </span>
     </li>
   </template>
 </section>
@@ -103,7 +106,9 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     const formatMinutes = (minutes: number) =>
       minutes < 1 ? labels.now : labels.minutes.replace('{count}', String(minutes));
 
-    const renderRow = (arrival: Arrival) => {
+    const formatClock = (date: Date) => date.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+    const renderRow = (arrival: Arrival, fetchedAt: Date) => {
       const row = rowTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
       const line = row.querySelector<HTMLAnchorElement>('[data-line]')!;
       line.textContent = arrival.line;
@@ -115,6 +120,12 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
       }
       row.querySelector('[data-destination]')!.textContent = arrival.destination;
       row.querySelector('[data-minutes]')!.textContent = formatMinutes(arrival.minutes);
+      // Estimated clock time; skipped for 'Now' since it adds nothing.
+      if (arrival.minutes >= 1) {
+        row.querySelector('[data-clock]')!.textContent = formatClock(
+          new Date(fetchedAt.getTime() + arrival.minutes * 60_000),
+        );
+      }
       return row;
     };
 
@@ -126,9 +137,9 @@ const lineUrl = getLineUrl(LINE_CODE, lang, stop.code);
     };
 
     const render = ({ arrivals, updatedAt }: LiveArrivalsResponse) => {
-      states.list.replaceChildren(...arrivals.map(renderRow));
-      const time = new Date(updatedAt).toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
-      updated.textContent = labels.updated.replace('{time}', time);
+      const fetchedAt = new Date(updatedAt);
+      states.list.replaceChildren(...arrivals.map((a) => renderRow(a, fetchedAt)));
+      updated.textContent = labels.updated.replace('{time}', formatClock(fetchedAt));
       show(arrivals.length > 0 ? 'list' : 'empty');
       // The stop map (StopMap.astro) shows where these buses are.
       sendToMap(arrivals);
