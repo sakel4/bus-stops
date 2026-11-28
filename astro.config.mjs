@@ -50,5 +50,8 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // Build output (~2,500 files) isn't watched by default exclusions; watching it slows the dev
+    // server enough on Windows to hit Vite's 60s module-load timeout.
+    server: { watch: { ignored: ['**/dist/**', '**/.vercel/**'] } },
   },
 });
